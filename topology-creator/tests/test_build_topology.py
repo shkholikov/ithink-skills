@@ -200,6 +200,25 @@ class TestRouting(unittest.TestCase):
             is not None
         )
 
+    def test_caption_blocks_even_its_own_device(self):
+        """The bug this guards: a link left its node's bottom edge and drove
+        straight down through that node's own device name."""
+        obs = self.routing.Obstacles(600, 400)
+        obs.add_rect(200, 200, 120, 40, owner=None)       # caption, unowned
+        obs.add_rect(230, 140, 60, 60, owner="a")         # icon laid over it
+        self.assertFalse(obs.free((26, 22), allow=("a",)),
+                         "a device's own caption must stay impassable")
+        self.assertTrue(obs.free((26, 17), allow=("a",)),
+                        "its own icon box must stay reachable")
+
+    def test_zone_crossing_is_penalised_not_forbidden(self):
+        obs = self.routing.Obstacles(600, 400)
+        obs.add_zone(150, 100, 300, 200, "other")
+        cell = (30, 20)
+        self.assertTrue(obs.free(cell, allow=()), "zones must stay passable")
+        self.assertGreater(obs.zone_penalty(cell, frozenset()), 0)
+        self.assertEqual(obs.zone_penalty(cell, frozenset({"other"})), 0)
+
     def test_no_route_returns_empty_not_an_error(self):
         obs = self.routing.Obstacles(400, 400)
         # Wall spans wider than the planning grid, so there is genuinely no way

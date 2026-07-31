@@ -23,31 +23,54 @@ GRID = 10               # planning resolution in px; finer is slower, not better
 TURN_COST = 14          # discourage staircases
 REUSE_COST = 9          # nudge parallel links into their own lane
 CLEARANCE = 8           # keep this far off icons and text
+ZONE_CROSS_COST = 7     # prefer the margins over cutting through a zone
 
 # (dx, dy) per direction index
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
 
 class Obstacles:
-    """A blocked-cell map built from icon boxes, captions and zone headers."""
+    """A blocked-cell map built from icon boxes, captions and zone headers.
+
+    Captions are hard obstacles for *every* link, including the links attached
+    to the device they belong to. Only an icon's own box may be entered by its
+    own links -- otherwise a link leaving a node's bottom edge drives straight
+    down through that node's own device name, which is the exact thing this
+    module exists to prevent.
+    """
 
     def __init__(self, width: float, height: float) -> None:
         self.w = int(width // GRID) + 4
         self.h = int(height // GRID) + 4
         self.blocked: set[tuple[int, int]] = set()
         self.owner: dict[tuple[int, int], str] = {}
+        self.zones: dict[tuple[int, int], tuple] = {}
 
-    def add_rect(self, x, y, w, h, owner: str | None = None) -> None:
-        x0 = int((x - CLEARANCE) // GRID)
-        x1 = int((x + w + CLEARANCE) // GRID)
-        y0 = int((y - CLEARANCE) // GRID)
-        y1 = int((y + h + CLEARANCE) // GRID)
+    def add_rect(self, x, y, w, h, owner: str | None = None,
+                 clearance: float | None = None) -> None:
+        for cell in self._cells(x, y, w, h, clearance):
+            self.blocked.add(cell)
+            if owner is not None:
+                self.owner[cell] = owner
+            else:
+                # A hard obstacle with no owner can never be entered; make sure
+                # an earlier owner claim does not keep it passable.
+                self.owner.pop(cell, None)
+
+    def add_zone(self, x, y, w, h, zone_id: str) -> None:
+        """Zone interiors are passable but discouraged -- see ZONE_CROSS_COST."""
+        for cell in self._cells(x, y, w, h, 0):
+            self.zones[cell] = self.zones.get(cell, ()) + (zone_id,)
+
+    def _cells(self, x, y, w, h, clearance: float | None = None):
+        pad = CLEARANCE if clearance is None else clearance
+        x0 = int((x - pad) // GRID)
+        x1 = int((x + w + pad) // GRID)
+        y0 = int((y - pad) // GRID)
+        y1 = int((y + h + pad) // GRID)
         for gx in range(x0, x1 + 1):
             for gy in range(y0, y1 + 1):
-                cell = (gx, gy)
-                self.blocked.add(cell)
-                if owner is not None:
-                    self.owner[cell] = owner
+                yield gx, gy
 
     def free(self, cell, allow: tuple) -> bool:
         gx, gy = cell
@@ -55,8 +78,14 @@ class Obstacles:
             return False
         if cell not in self.blocked:
             return True
-        # A path may start and end inside its own endpoints' footprints.
+        # A link may only enter its own endpoints' icon boxes.
         return self.owner.get(cell) in allow
+
+    def zone_penalty(self, cell, allow_zones: frozenset) -> float:
+        crossed = self.zones.get(cell)
+        if not crossed:
+            return 0.0
+        return ZONE_CROSS_COST * sum(1 for z in crossed if z not in allow_zones)
 
 
 def _to_grid(point) -> tuple[int, int]:
@@ -75,7 +104,8 @@ def _direction(from_cell, to_cell) -> int:
 
 def plan(start, end, obstacles: Obstacles, used: dict,
          allow: tuple, start_dir: int | None = None,
-         end_dir: int | None = None) -> list[tuple[float, float]]:
+         end_dir: int | None = None,
+         allow_zones: frozenset = frozenset()) -> list[tuple[float, float]]:
     """Route start -> end around obstacles. Returns [] if no path exists.
 
     `start` and `end` are absolute px points on the two icons' perimeters.
@@ -116,6 +146,7 @@ def plan(start, end, obstacles: Obstacles, used: dict,
             if direction != -1 and i != direction:
                 step += TURN_COST
             step += REUSE_COST * used.get(nxt, 0)
+            step += obstacles.zone_penalty(nxt, allow_zones)
             ncost = cost + step
             nstate = (nxt, i)
             if nstate in best and best[nstate] <= ncost:

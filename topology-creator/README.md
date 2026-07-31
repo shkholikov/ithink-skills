@@ -115,7 +115,7 @@ never fails the build.
 python3 tests/test_build_topology.py
 ```
 
-24 tests: the five hard-error cases, icon alias resolution, base64 embedding,
+26 tests: the five hard-error cases, icon alias resolution, base64 embedding,
 legend generation, obstacle avoidance in the router, and a clean build of the
 shipped example.
 

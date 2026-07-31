@@ -83,6 +83,15 @@ header, then writes explicit waypoints into the file. This is the single
 biggest thing that makes a generated diagram readable, and it is automatic —
 you do not configure it.
 
+Two rules it enforces that are easy to get wrong by hand:
+
+- **A device's own caption is off limits to its own links.** Otherwise a link
+  leaving the bottom edge runs straight down through that device's name. On
+  vertical runs links therefore leave from a side and arrive at a top edge.
+- **Crossing an unrelated zone costs extra.** Links prefer the margins between
+  zones, so a trunk heading across the page does not cut through a room it has
+  nothing to do with.
+
 Two levers if a path still looks wrong:
 
 - **`zonesFirst: true`** on a zone renders its nested zones *above* its own

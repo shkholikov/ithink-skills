@@ -209,55 +209,99 @@ def layout_page(page: dict, nodes_by_id: dict, icons: IconLibrary) -> None:
         assign_absolute(zone, 0, 0, nodes_by_id)
 
 
-def assign_absolute(zone: dict, ox: float, oy: float, nodes_by_id: dict) -> None:
+def zone_key(zone: dict) -> str:
+    return zone.get("id") or zone.get("label") or str(id(zone))
+
+
+def assign_absolute(zone: dict, ox: float, oy: float, nodes_by_id: dict,
+                    chain: tuple = ()) -> None:
     box = zone["_box"]
     zx, zy = ox + box.x, oy + box.y
     zone["_abs"] = Box(zx, zy, box.w, box.h)
+    here = chain + (zone_key(zone),)
     for nid in zone.get("nodes", []):
         b = nodes_by_id[nid]["_box"]
         nodes_by_id[nid]["_abs"] = Box(zx + b.x, zy + b.y, b.w, b.h)
+        # Zones this device sits inside, outermost first. A link between two
+        # devices may cross their own zones for free; anything else costs.
+        nodes_by_id[nid]["_zones"] = here
     for child in zone.get("zones", []):
-        assign_absolute(child, zx, zy, nodes_by_id)
+        assign_absolute(child, zx, zy, nodes_by_id, here)
+
+
+CAPTION_WRAP = 142          # must match labelWidth in node_style()
+
+
+def _text_extent(text: str, px_per_char: float, line_height: int):
+    """Rough width/height of a caption line once draw.io has wrapped it.
+
+    Deliberately an estimate. Sizing the obstacle at the full wrap width
+    instead turns a row of devices into one solid wall, and every vertical
+    link then has to detour around the entire row.
+    """
+    width = len(text) * px_per_char
+    if width <= CAPTION_WRAP:
+        return width, line_height
+    lines = int(width // CAPTION_WRAP) + 1
+    return float(CAPTION_WRAP), line_height * lines
 
 
 def caption_box(node: dict) -> Box:
     """Where the icon's caption text lands. The router must avoid this too --
     a line through a device name is exactly what makes a diagram unreadable."""
     b = node["_abs"]
-    height = 17                                   # bold title line
+    title = str(node["label"]) + (f" x {node['count']}" if node.get("count") else "")
+
+    width, height = _text_extent(title, 6.6, 17)        # bold 11px
     if node.get("sub"):
-        height += 13
-    height += 12 * len(node.get("badges", []))
-    width = 146
+        w, h = _text_extent(str(node["sub"]), 5.5, 13)  # grey 10px
+        width, height = max(width, w), height + h
+    for badge in node.get("badges", []):
+        w, h = _text_extent(str(badge), 5.0, 12)        # 9px
+        width, height = max(width, w), height + h
+
+    width += 6
     return Box(b.x + b.w / 2 - width / 2, b.y + b.h + 2, width, height)
 
 
 def collect_obstacles(page: dict, nodes_by_id: dict, placed_ids: list):
     """Every icon, caption and zone header on the page, plus the page extent."""
-    rects = []
+    headers, zone_rects = [], []
 
     def walk(zone: dict) -> None:
         zb = zone["_abs"]
+        zone_rects.append((zb, zone_key(zone)))
         if zone.get("label"):
             header_w = min(zb.w - 12, 8.5 * len(zone["label"]) + 16)
-            rects.append((Box(zb.x + 6, zb.y + 2, header_w, 24), None))
+            headers.append(Box(zb.x + 6, zb.y + 2, header_w, 24))
         for child in zone.get("zones", []):
             walk(child)
 
     for zone in page.get("zones", []):
         walk(zone)
 
-    for nid in placed_ids:
-        node = nodes_by_id[nid]
-        rects.append((node["_abs"], nid))
-        rects.append((caption_box(node), nid))
+    icons_ = [(nodes_by_id[nid]["_abs"], nid) for nid in placed_ids]
+    captions = [caption_box(nodes_by_id[nid]) for nid in placed_ids]
 
-    right = max((r.x + r.w for r, _ in rects), default=1000)
-    bottom = max((r.y + r.h for r, _ in rects), default=1000)
+    every = [r for r, _ in icons_] + captions + headers + [r for r, _ in zone_rects]
+    right = max((r.x + r.w for r in every), default=1000)
+    bottom = max((r.y + r.h for r in every), default=1000)
 
     obstacles = routing.Obstacles(right + 220, bottom + 220)
-    for rect, owner in rects:
-        obstacles.add_rect(rect.x, rect.y, rect.w, rect.h, owner)
+
+    for rect, zone_id in zone_rects:
+        obstacles.add_zone(rect.x, rect.y, rect.w, rect.h, zone_id)
+
+    # Order matters. Captions and zone headers go down first as unowned hard
+    # blocks; icon boxes are laid over them afterwards and reclaim the thin
+    # overlap band. That lets a link reach its own icon's edge without being
+    # free to run the length of that icon's own caption.
+    # Text needs less breathing room than an icon; a wide margin here is what
+    # welds neighbouring captions into an impassable row.
+    for rect in captions + headers:
+        obstacles.add_rect(rect.x, rect.y, rect.w, rect.h, None, clearance=3)
+    for rect, nid in icons_:
+        obstacles.add_rect(rect.x, rect.y, rect.w, rect.h, nid)
     return obstacles
 
 
@@ -285,12 +329,16 @@ def auto_anchors(src: dict, dst: dict) -> dict:
     dx = (b.x + b.w / 2) - (a.x + a.w / 2)
     dy = (b.y + b.h / 2) - (a.y + a.h / 2)
 
-    # Bias towards horizontal: icons carry their caption underneath, so leaving
-    # from the bottom edge draws the line straight through the text.
+    # Every icon carries its caption directly underneath, so a *bottom* anchor
+    # is never safe: the line would have to cross that device's own name. The
+    # top edge is always clear. So for vertical runs, leave from a side and
+    # arrive at the top -- or, going upward, leave from the top and arrive at a
+    # side. The router turns the small dog-leg into a clean path.
     if abs(dy) > abs(dx) * 1.6:
+        side = 1 if dx >= 0 else 0
         if dy > 0:
-            return {"exitX": 0.5, "exitY": 1, "entryX": 0.5, "entryY": 0}
-        return {"exitX": 0.5, "exitY": 0, "entryX": 0.5, "entryY": 1}
+            return {"exitX": side, "exitY": 0.5, "entryX": 0.5, "entryY": 0}
+        return {"exitX": 0.5, "exitY": 0, "entryX": side, "entryY": 0.5}
     if dx > 0:
         return {"exitX": 1, "exitY": 0.5, "entryX": 0, "entryY": 0.5}
     return {"exitX": 0, "exitY": 0.5, "entryX": 1, "entryY": 0.5}
@@ -561,6 +609,7 @@ def build_page(xml: XmlBuilder, page: dict, spec: dict,
             allow=(link["from"], link["to"]),
             start_dir=_LEAVE.get(exit_side),
             end_dir=_ARRIVE.get(entry_side),
+            allow_zones=frozenset(src.get("_zones", ()) + dst.get("_zones", ())),
         )
         waypoints_for[index] = path
 
