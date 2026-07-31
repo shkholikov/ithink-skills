@@ -106,10 +106,11 @@ def layout_zone(zone: dict, nodes_by_id: dict, icons: IconLibrary) -> Box:
     node_ids = zone.get("nodes", [])
     cols = zone.get("cols") or max(1, min(len(node_ids), 4))
 
-    inner_w = 0.0
-    cursor_y = ZONE_PAD_TOP
+    state = {"w": 0.0, "y": ZONE_PAD_TOP}
 
-    if node_ids:
+    def place_nodes() -> None:
+        if not node_ids:
+            return
         rows = (len(node_ids) + cols - 1) // cols
         for i, nid in enumerate(node_ids):
             node = nodes_by_id.get(nid)
@@ -121,23 +122,36 @@ def layout_zone(zone: dict, nodes_by_id: dict, icons: IconLibrary) -> Box:
             iw, ih = fit_icon(node["_aspect"])
             node["_box"] = Box(
                 ZONE_PAD_X + col * CELL_W + (CELL_W - iw) / 2,
-                cursor_y + row * CELL_H,
+                state["y"] + row * CELL_H,
                 iw, ih,
             )
-        inner_w = max(inner_w, cols * CELL_W)
-        cursor_y += rows * CELL_H
+        state["w"] = max(state["w"], cols * CELL_W)
+        state["y"] += rows * CELL_H
 
-    for child in zone.get("zones", []):
-        child_box = layout_zone(child, nodes_by_id, icons)
-        child_box.x = ZONE_PAD_X
-        child_box.y = cursor_y
-        child["_box"] = child_box
-        inner_w = max(inner_w, child_box.w)
-        cursor_y += child_box.h + ZONE_GAP
+    def place_zones() -> None:
+        for child in zone.get("zones", []):
+            child_box = layout_zone(child, nodes_by_id, icons)
+            child_box.x = ZONE_PAD_X
+            child_box.y = state["y"]
+            child["_box"] = child_box
+            state["w"] = max(state["w"], child_box.w)
+            state["y"] += child_box.h + ZONE_GAP
+        if zone.get("zones"):
+            state["y"] -= ZONE_GAP
 
-    if zone.get("zones"):
-        cursor_y -= ZONE_GAP
+    # Nested zones normally sit under their parent's own devices. Flipping the
+    # order puts the parent's devices at the bottom edge, next to whatever the
+    # zone below connects to -- which stops uplinks crossing the nested boxes.
+    if zone.get("zonesFirst"):
+        place_zones()
+        state["y"] += ZONE_GAP
+        place_nodes()
+    else:
+        place_nodes()
+        place_zones()
 
+    cursor_y = state["y"]
+    inner_w = state["w"]
     width = zone.get("width") or (inner_w + 2 * ZONE_PAD_X)
     height = cursor_y + ZONE_PAD_BOTTOM
     return Box(0, 0, width, height)

@@ -1,6 +1,5 @@
 {
   "title": "Aslzar — топология сети предприятия",
-
   "pages": [
     {
       "name": "Этаж 1 · Floor 1",
@@ -8,7 +7,11 @@
         "title": "Топология сети предприятия · Enterprise network topology",
         "subtitle": "2 ISP · Kerio Control + pfSense · Aruba Instant On 1930 core · 4 Omada switches · 4 × AP653 · VLAN 1 / 10 / 20 / 22 / 40 / 55 / 99 / 130"
       },
-      "nodes": ["internet", "isp1", "isp2"],
+      "nodes": [
+        "internet",
+        "isp1",
+        "isp2"
+      ],
       "zones": [
         {
           "id": "serverroom",
@@ -16,8 +19,11 @@
           "color": "#DC2626",
           "dash": "dashed",
           "row": 0,
-          "cols": 3,
-          "nodes": ["dl380", "dl20", "aruba"],
+          "cols": 2,
+          "nodes": [
+            "dl380",
+            "dl20"
+          ],
           "zones": [
             {
               "id": "dl380roles",
@@ -25,7 +31,11 @@
               "color": "#2563EB",
               "dash": "dotted",
               "cols": 3,
-              "nodes": ["kerio", "winsrv", "pfsense"]
+              "nodes": [
+                "kerio",
+                "winsrv",
+                "pfsense"
+              ]
             },
             {
               "id": "dl20roles",
@@ -33,8 +43,26 @@
               "color": "#7C3AED",
               "dash": "dotted",
               "cols": 5,
-              "nodes": ["ad", "apache", "ubuntu1", "ubuntu2", "zabbix"]
+              "nodes": [
+                "ad",
+                "apache",
+                "ubuntu1",
+                "ubuntu2",
+                "zabbix"
+              ]
             }
+          ],
+          "zonesFirst": true
+        },
+        {
+          "id": "core",
+          "label": "Ядро · Core",
+          "color": "#7C3AED",
+          "dash": "solid",
+          "row": 1,
+          "cols": 1,
+          "nodes": [
+            "aruba"
           ]
         },
         {
@@ -42,31 +70,45 @@
           "label": "Undnzv (название уточнить)",
           "color": "#2563EB",
           "dash": "solid",
-          "row": 1,
+          "row": 2,
           "cols": 3,
-          "nodes": ["sw_undnzv", "laptops_undnzv", "cam_undnzv"]
+          "nodes": [
+            "sw_undnzv",
+            "laptops_undnzv",
+            "cam_undnzv"
+          ]
         },
         {
           "id": "sales",
           "label": "Отдел продаж · Sales",
           "color": "#2563EB",
           "dash": "solid",
-          "row": 1,
+          "row": 2,
           "cols": 4,
-          "nodes": ["sw_sales", "mono_sales", "cam_sales", "scud_sales"]
+          "nodes": [
+            "sw_sales",
+            "mono_sales",
+            "cam_sales",
+            "scud_sales"
+          ]
         },
         {
           "id": "outdoor",
           "label": "Улица · Outdoor",
           "color": "#059669",
           "dash": "solid",
-          "row": 2,
+          "row": 3,
           "cols": 5,
-          "nodes": ["poe_street", "cam_street", "cam_street2", "patchpanel", "aphq03"]
+          "nodes": [
+            "poe_street",
+            "aphq03",
+            "cam_street",
+            "cam_street2",
+            "patchpanel"
+          ]
         }
       ]
     },
-
     {
       "name": "Этаж -1 · Floor -1",
       "header": {
@@ -81,7 +123,14 @@
           "dash": "solid",
           "row": 0,
           "cols": 3,
-          "nodes": ["sw0152", "sw0328", "sw0218p", "nvr", "laptops_noc", "cam_noc"]
+          "nodes": [
+            "sw0152",
+            "sw0328",
+            "sw0218p",
+            "nvr",
+            "laptops_noc",
+            "cam_noc"
+          ]
         },
         {
           "id": "callcentre",
@@ -90,7 +139,14 @@
           "dash": "solid",
           "row": 0,
           "cols": 3,
-          "nodes": ["sw0452", "sw_cc1", "sw_cc2", "aphq04", "cam_cc", "scud_cc"]
+          "nodes": [
+            "sw0452",
+            "sw_cc1",
+            "sw_cc2",
+            "aphq04",
+            "cam_cc",
+            "scud_cc"
+          ]
         },
         {
           "id": "hall",
@@ -99,8 +155,16 @@
           "dash": "solid",
           "row": 1,
           "cols": 4,
-          "nodes": ["sw_hall1", "sw_hall2", "poe_hall", "aphq01",
-                    "laptops_hall", "printer_hall", "cam_hall", "scud_hall"]
+          "nodes": [
+            "sw_hall1",
+            "sw_hall2",
+            "poe_hall",
+            "aphq01",
+            "laptops_hall",
+            "printer_hall",
+            "cam_hall",
+            "scud_hall"
+          ]
         },
         {
           "id": "accounting",
@@ -109,194 +173,631 @@
           "dash": "solid",
           "row": 1,
           "cols": 4,
-          "nodes": ["sw_acc1", "sw_acc2", "sw_acc3", "aphq02",
-                    "laptops_acc", "printer_acc", "cam_acc"]
+          "nodes": [
+            "sw_acc1",
+            "sw_acc2",
+            "sw_acc3",
+            "aphq02",
+            "laptops_acc",
+            "printer_acc",
+            "cam_acc"
+          ]
         }
       ]
     }
   ],
-
   "nodes": [
-    {"id": "internet", "icon": "internet", "label": "Интернет · Internet"},
-    {"id": "isp1", "icon": "isp-router", "label": "ISP 1 · GPON router",
-     "sub": "250 Mbps · 1 public IP"},
-    {"id": "isp2", "icon": "isp-router", "label": "ISP 2 · GPON router",
-     "sub": "350 Mbps · 3 public IP"},
-
-    {"id": "dl380", "icon": "hypervisor", "label": "HPE ProLiant DL380 Gen10 Plus",
-     "sub": "4 × 1 GbE · edge / security host"},
-    {"id": "kerio", "icon": "firewall", "label": "Kerio Control",
-     "sub": "VLAN 1/10/99 gateway"},
-    {"id": "winsrv", "icon": "server", "label": "Windows Server",
-     "sub": "app / file services"},
-    {"id": "pfsense", "icon": "firewall", "label": "pfSense",
-     "sub": "VLAN 22 gateway"},
-
-    {"id": "dl20", "icon": "hypervisor", "label": "HPE ProLiant DL20 Gen10",
-     "sub": "2 × 1 GbE · services host"},
-    {"id": "ad", "icon": "active-directory", "label": "MS Active Directory",
-     "sub": "domain controller"},
-    {"id": "apache", "icon": "web-server", "label": "Debian + Apache", "sub": "web"},
-    {"id": "ubuntu1", "icon": "server", "label": "Ubuntu Server"},
-    {"id": "ubuntu2", "icon": "server", "label": "Ubuntu Server"},
-    {"id": "zabbix", "icon": "monitoring", "label": "Zabbix 7.0",
-     "sub": "мониторинг сети"},
-
-    {"id": "aruba", "icon": "l3-switch", "label": "Aruba Instant On 1930",
-     "sub": "JL682A · 24G + 4 SFP/SFP+ · core"},
-
-    {"id": "sw_undnzv", "icon": "unmanaged-switch", "label": "Unmanaged switch",
-     "sub": "8 × 1 GbE · VLAN 10"},
-    {"id": "laptops_undnzv", "icon": "laptop", "label": "Ноутбуки", "count": 4},
-    {"id": "cam_undnzv", "icon": "ip-camera", "label": "K1T-2CD", "count": 1},
-
-    {"id": "sw_sales", "icon": "unmanaged-switch", "label": "Unmanaged switch",
-     "sub": "8 × 1 GbE · VLAN 10"},
-    {"id": "mono_sales", "icon": "workstation", "label": "Моноблоки", "count": 2},
-    {"id": "cam_sales", "icon": "ip-camera", "label": "K1T-2CD", "count": 4},
-    {"id": "scud_sales", "icon": "access-control", "label": "K1T-343",
-     "sub": "терминал СКУД", "count": 1},
-
-    {"id": "poe_street", "icon": "poe-switch", "label": "Unmanaged PoE",
-     "sub": "16 × 1 GbE"},
-    {"id": "cam_street", "icon": "ip-camera", "label": "K1T-2CD · улица",
-     "sub": "outdoor", "count": 2},
-    {"id": "cam_street2", "icon": "ip-camera", "label": "K1T-2CD", "count": 1},
-    {"id": "patchpanel", "icon": "patch-panel", "label": "Патч-панель",
-     "sub": "patch panel"},
-    {"id": "aphq03", "icon": "ap", "label": "APHQ03", "sub": "AP653 · Trunk",
-     "badges": ["VLAN 20 · VLAN 130"]},
-
-    {"id": "sw0152", "icon": "switch", "label": "SWHQ0152",
-     "sub": "Omada SG3452 · 48G + 4 SFP · distribution"},
-    {"id": "sw0328", "icon": "switch", "label": "SWHQ0328",
-     "sub": "Omada SG2428 · access / CCTV"},
-    {"id": "sw0218p", "icon": "poe-switch", "label": "SWHQ0218P",
-     "sub": "Omada SG2110P · access / PoE"},
-    {"id": "nvr", "icon": "nvr", "label": "Hikvision NVR",
-     "sub": "видеорегистраторы", "count": 35},
-    {"id": "laptops_noc", "icon": "laptop", "label": "Ноутбуки", "count": 2},
-    {"id": "cam_noc", "icon": "ip-camera", "label": "K1T-2CD", "count": 1},
-
-    {"id": "sw0452", "icon": "switch", "label": "SWHQ0452",
-     "sub": "Omada SG3452 · 48G + 4 SFP · distribution"},
-    {"id": "sw_cc1", "icon": "unmanaged-switch", "label": "Unmanaged",
-     "sub": "16 × 1 GbE"},
-    {"id": "sw_cc2", "icon": "unmanaged-switch", "label": "Unmanaged",
-     "sub": "16 × 1 GbE · uplink + last port"},
-    {"id": "aphq04", "icon": "ap", "label": "APHQ04", "sub": "AP653 · VLAN 22",
-     "badges": ["VLAN 20 · VLAN 130"]},
-    {"id": "cam_cc", "icon": "ip-camera", "label": "K1T-2CD", "count": 2},
-    {"id": "scud_cc", "icon": "access-control", "label": "K1T-343", "count": 1},
-
-    {"id": "sw_hall1", "icon": "unmanaged-switch", "label": "Unmanaged",
-     "sub": "8G · VLAN 10"},
-    {"id": "sw_hall2", "icon": "unmanaged-switch", "label": "Unmanaged",
-     "sub": "8G · VLAN 10"},
-    {"id": "poe_hall", "icon": "poe-switch", "label": "Unmanaged PoE",
-     "sub": "16 × 100 Mbps"},
-    {"id": "aphq01", "icon": "ap", "label": "APHQ01", "sub": "AP653 · Trunk",
-     "badges": ["VLAN 20 · VLAN 130"]},
-    {"id": "laptops_hall", "icon": "laptop", "label": "Ноутбуки (LAN + Wi-Fi)",
-     "count": 10},
-    {"id": "printer_hall", "icon": "printer", "label": "Epson L3210", "count": 1},
-    {"id": "cam_hall", "icon": "ip-camera", "label": "K1T-2CD", "count": 9},
-    {"id": "scud_hall", "icon": "access-control", "label": "K1T-343", "count": 1},
-
-    {"id": "sw_acc1", "icon": "unmanaged-switch", "label": "Unmanaged",
-     "sub": "8G · VLAN 22"},
-    {"id": "sw_acc2", "icon": "unmanaged-switch", "label": "Unmanaged",
-     "sub": "8G · VLAN 22"},
-    {"id": "sw_acc3", "icon": "unmanaged-switch", "label": "Unmanaged",
-     "sub": "8G · VLAN 10"},
-    {"id": "aphq02", "icon": "ap", "label": "APHQ02", "sub": "AP653 · Trunk",
-     "badges": ["VLAN 20 · VLAN 130"]},
-    {"id": "laptops_acc", "icon": "laptop", "label": "Ноутбуки", "count": 10},
-    {"id": "printer_acc", "icon": "printer", "label": "Epson L3210", "count": 1},
-    {"id": "cam_acc", "icon": "ip-camera", "label": "K1T-2CD", "count": 2}
+    {
+      "id": "internet",
+      "icon": "internet",
+      "label": "Интернет · Internet"
+    },
+    {
+      "id": "isp1",
+      "icon": "isp-router",
+      "label": "ISP 1 · GPON router",
+      "sub": "250 Mbps · 1 public IP"
+    },
+    {
+      "id": "isp2",
+      "icon": "isp-router",
+      "label": "ISP 2 · GPON router",
+      "sub": "350 Mbps · 3 public IP"
+    },
+    {
+      "id": "dl380",
+      "icon": "hypervisor",
+      "label": "HPE ProLiant DL380 Gen10 Plus",
+      "sub": "4 × 1 GbE · edge / security host"
+    },
+    {
+      "id": "kerio",
+      "icon": "firewall",
+      "label": "Kerio Control",
+      "sub": "VLAN 1/10/99 gateway"
+    },
+    {
+      "id": "winsrv",
+      "icon": "server",
+      "label": "Windows Server",
+      "sub": "app / file services"
+    },
+    {
+      "id": "pfsense",
+      "icon": "firewall",
+      "label": "pfSense",
+      "sub": "VLAN 22 gateway"
+    },
+    {
+      "id": "dl20",
+      "icon": "hypervisor",
+      "label": "HPE ProLiant DL20 Gen10",
+      "sub": "2 × 1 GbE · services host"
+    },
+    {
+      "id": "ad",
+      "icon": "active-directory",
+      "label": "MS Active Directory",
+      "sub": "domain controller"
+    },
+    {
+      "id": "apache",
+      "icon": "web-server",
+      "label": "Debian + Apache",
+      "sub": "web"
+    },
+    {
+      "id": "ubuntu1",
+      "icon": "server",
+      "label": "Ubuntu Server"
+    },
+    {
+      "id": "ubuntu2",
+      "icon": "server",
+      "label": "Ubuntu Server"
+    },
+    {
+      "id": "zabbix",
+      "icon": "monitoring",
+      "label": "Zabbix 7.0",
+      "sub": "мониторинг сети"
+    },
+    {
+      "id": "aruba",
+      "icon": "l3-switch",
+      "label": "Aruba Instant On 1930",
+      "sub": "JL682A · 24G + 4 SFP/SFP+ · core"
+    },
+    {
+      "id": "sw_undnzv",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged switch",
+      "sub": "8 × 1 GbE · VLAN 10"
+    },
+    {
+      "id": "laptops_undnzv",
+      "icon": "laptop",
+      "label": "Ноутбуки",
+      "count": 4
+    },
+    {
+      "id": "cam_undnzv",
+      "icon": "ip-camera",
+      "label": "K1T-2CD",
+      "count": 1
+    },
+    {
+      "id": "sw_sales",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged switch",
+      "sub": "8 × 1 GbE · VLAN 10"
+    },
+    {
+      "id": "mono_sales",
+      "icon": "workstation",
+      "label": "Моноблоки",
+      "count": 2
+    },
+    {
+      "id": "cam_sales",
+      "icon": "ip-camera",
+      "label": "K1T-2CD",
+      "count": 4
+    },
+    {
+      "id": "scud_sales",
+      "icon": "access-control",
+      "label": "K1T-343",
+      "sub": "терминал СКУД",
+      "count": 1
+    },
+    {
+      "id": "poe_street",
+      "icon": "poe-switch",
+      "label": "Unmanaged PoE",
+      "sub": "16 × 1 GbE"
+    },
+    {
+      "id": "cam_street",
+      "icon": "ip-camera",
+      "label": "K1T-2CD · улица",
+      "sub": "outdoor",
+      "count": 2
+    },
+    {
+      "id": "cam_street2",
+      "icon": "ip-camera",
+      "label": "K1T-2CD",
+      "count": 1
+    },
+    {
+      "id": "patchpanel",
+      "icon": "patch-panel",
+      "label": "Патч-панель",
+      "sub": "patch panel"
+    },
+    {
+      "id": "aphq03",
+      "icon": "ap",
+      "label": "APHQ03",
+      "sub": "AP653 · Trunk",
+      "badges": [
+        "VLAN 20 · VLAN 130"
+      ]
+    },
+    {
+      "id": "sw0152",
+      "icon": "switch",
+      "label": "SWHQ0152",
+      "sub": "Omada SG3452 · 48G + 4 SFP · distribution"
+    },
+    {
+      "id": "sw0328",
+      "icon": "switch",
+      "label": "SWHQ0328",
+      "sub": "Omada SG2428 · access / CCTV"
+    },
+    {
+      "id": "sw0218p",
+      "icon": "poe-switch",
+      "label": "SWHQ0218P",
+      "sub": "Omada SG2110P · access / PoE"
+    },
+    {
+      "id": "nvr",
+      "icon": "nvr",
+      "label": "Hikvision NVR",
+      "sub": "видеорегистраторы",
+      "count": 35
+    },
+    {
+      "id": "laptops_noc",
+      "icon": "laptop",
+      "label": "Ноутбуки",
+      "count": 2
+    },
+    {
+      "id": "cam_noc",
+      "icon": "ip-camera",
+      "label": "K1T-2CD",
+      "count": 1
+    },
+    {
+      "id": "sw0452",
+      "icon": "switch",
+      "label": "SWHQ0452",
+      "sub": "Omada SG3452 · 48G + 4 SFP · distribution"
+    },
+    {
+      "id": "sw_cc1",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged",
+      "sub": "16 × 1 GbE"
+    },
+    {
+      "id": "sw_cc2",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged",
+      "sub": "16 × 1 GbE · uplink + last port"
+    },
+    {
+      "id": "aphq04",
+      "icon": "ap",
+      "label": "APHQ04",
+      "sub": "AP653 · VLAN 22",
+      "badges": [
+        "VLAN 20 · VLAN 130"
+      ]
+    },
+    {
+      "id": "cam_cc",
+      "icon": "ip-camera",
+      "label": "K1T-2CD",
+      "count": 2
+    },
+    {
+      "id": "scud_cc",
+      "icon": "access-control",
+      "label": "K1T-343",
+      "count": 1
+    },
+    {
+      "id": "sw_hall1",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged",
+      "sub": "8G · VLAN 10"
+    },
+    {
+      "id": "sw_hall2",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged",
+      "sub": "8G · VLAN 10"
+    },
+    {
+      "id": "poe_hall",
+      "icon": "poe-switch",
+      "label": "Unmanaged PoE",
+      "sub": "16 × 100 Mbps"
+    },
+    {
+      "id": "aphq01",
+      "icon": "ap",
+      "label": "APHQ01",
+      "sub": "AP653 · Trunk",
+      "badges": [
+        "VLAN 20 · VLAN 130"
+      ]
+    },
+    {
+      "id": "laptops_hall",
+      "icon": "laptop",
+      "label": "Ноутбуки (LAN + Wi-Fi)",
+      "count": 10
+    },
+    {
+      "id": "printer_hall",
+      "icon": "printer",
+      "label": "Epson L3210",
+      "count": 1
+    },
+    {
+      "id": "cam_hall",
+      "icon": "ip-camera",
+      "label": "K1T-2CD",
+      "count": 9
+    },
+    {
+      "id": "scud_hall",
+      "icon": "access-control",
+      "label": "K1T-343",
+      "count": 1
+    },
+    {
+      "id": "sw_acc1",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged",
+      "sub": "8G · VLAN 22"
+    },
+    {
+      "id": "sw_acc2",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged",
+      "sub": "8G · VLAN 22"
+    },
+    {
+      "id": "sw_acc3",
+      "icon": "unmanaged-switch",
+      "label": "Unmanaged",
+      "sub": "8G · VLAN 10"
+    },
+    {
+      "id": "aphq02",
+      "icon": "ap",
+      "label": "APHQ02",
+      "sub": "AP653 · Trunk",
+      "badges": [
+        "VLAN 20 · VLAN 130"
+      ]
+    },
+    {
+      "id": "laptops_acc",
+      "icon": "laptop",
+      "label": "Ноутбуки",
+      "count": 10
+    },
+    {
+      "id": "printer_acc",
+      "icon": "printer",
+      "label": "Epson L3210",
+      "count": 1
+    },
+    {
+      "id": "cam_acc",
+      "icon": "ip-camera",
+      "label": "K1T-2CD",
+      "count": 2
+    }
   ],
-
   "links": [
-    {"from": "internet", "to": "isp1", "color": "#DC2626", "width": 3,
-     "meaning": "UpLink / WAN"},
-    {"from": "internet", "to": "isp2", "color": "#DC2626", "width": 3},
-    {"from": "isp1", "to": "dl380", "toPort": "p1", "color": "#DC2626",
-     "width": 3, "label": "Kerio WAN1"},
-    {"from": "isp2", "to": "dl380", "toPort": "p3", "color": "#DC2626",
-     "width": 3, "label": "Kerio WAN2 + pfSense WAN"},
-
-    {"from": "dl380", "to": "aruba", "fromPort": "p2", "toPort": "p1",
-     "color": "#111827", "width": 3, "label": "Trunk",
-     "meaning": "Trunk — 802.1Q, все VLAN"},
-    {"from": "dl20", "to": "aruba", "fromPort": "p1", "toPort": "p13",
-     "color": "#7C3AED", "width": 2,
-     "meaning": "VLAN 1 — Server Farm · 10.30.25.0/24"},
-
-    {"from": "aruba", "to": "sw_undnzv", "fromPort": "p8", "toPort": "p1",
-     "color": "#2563EB", "width": 2, "meaning": "VLAN 10 — LAN · рабочие места"},
-    {"from": "aruba", "to": "sw_sales", "fromPort": "p6", "toPort": "p1",
-     "color": "#2563EB", "width": 2},
-    {"from": "aruba", "to": "poe_street", "fromPort": "p5", "toPort": "p16",
-     "color": "#059669", "width": 2,
-     "meaning": "VLAN 55 — видеонаблюдение / СКУД"},
-    {"from": "aruba", "to": "aphq03", "fromPort": "p4", "color": "#111827",
-     "width": 3, "label": "Trunk"},
-
-    {"from": "sw_undnzv", "to": "laptops_undnzv", "color": "#9CA3AF",
-     "meaning": "Подключение оконечных устройств"},
-    {"from": "sw_undnzv", "to": "cam_undnzv", "color": "#059669"},
-    {"from": "sw_sales", "to": "mono_sales", "color": "#9CA3AF"},
-    {"from": "sw_sales", "to": "cam_sales", "color": "#059669"},
-    {"from": "sw_sales", "to": "scud_sales", "color": "#059669"},
-    {"from": "poe_street", "to": "cam_street", "color": "#059669"},
-    {"from": "poe_street", "to": "cam_street2", "color": "#059669"},
-    {"from": "poe_street", "to": "patchpanel", "color": "#9CA3AF"},
-
-    {"from": "sw0152", "to": "sw0328", "fromPort": "p47", "toPort": "p24",
-     "color": "#111827", "width": 3, "label": "Trunk"},
-    {"from": "sw0152", "to": "sw0218p", "fromPort": "p45", "toPort": "p16",
-     "color": "#111827", "width": 3, "label": "Trunk"},
-    {"from": "sw0328", "to": "nvr", "fromPort": "p1-22", "color": "#059669",
-     "width": 2},
-    {"from": "sw0152", "to": "laptops_noc", "fromPort": "p5", "color": "#2563EB"},
-    {"from": "sw0152", "to": "cam_noc", "fromPort": "p18", "color": "#059669"},
-
-    {"from": "sw0452", "to": "sw_cc1", "fromPort": "p28", "toPort": "p1",
-     "color": "#2563EB", "width": 2},
-    {"from": "sw0452", "to": "sw_cc2", "fromPort": "p33", "toPort": "p1",
-     "color": "#2563EB", "width": 2},
-    {"from": "sw0452", "to": "aphq04", "fromPort": "p19", "color": "#111827",
-     "width": 3, "label": "Trunk"},
-    {"from": "sw_cc1", "to": "cam_cc", "color": "#059669"},
-    {"from": "sw_cc1", "to": "scud_cc", "color": "#059669"},
-
-    {"from": "sw_hall1", "to": "sw_hall2", "color": "#9CA3AF", "dashed": true,
-     "meaning": "Каскад неуправляемых коммутаторов"},
-    {"from": "sw_hall2", "to": "poe_hall", "color": "#9CA3AF", "dashed": true},
-    {"from": "sw_hall1", "to": "laptops_hall", "color": "#9CA3AF"},
-    {"from": "sw_hall2", "to": "printer_hall", "color": "#9CA3AF"},
-    {"from": "poe_hall", "to": "cam_hall", "color": "#059669"},
-    {"from": "poe_hall", "to": "scud_hall", "color": "#059669"},
-    {"from": "sw_hall1", "to": "aphq01", "color": "#111827", "width": 3,
-     "label": "Trunk"},
-
-    {"from": "sw_acc1", "to": "printer_acc", "color": "#9CA3AF"},
-    {"from": "sw_acc2", "to": "cam_acc", "color": "#059669"},
-    {"from": "sw_acc3", "to": "laptops_acc", "color": "#9CA3AF"},
-    {"from": "sw_acc3", "to": "aphq02", "color": "#111827", "width": 3,
-     "label": "Trunk"}
+    {
+      "from": "internet",
+      "to": "isp1",
+      "color": "#DC2626",
+      "width": 3,
+      "meaning": "UpLink / WAN"
+    },
+    {
+      "from": "internet",
+      "to": "isp2",
+      "color": "#DC2626",
+      "width": 3
+    },
+    {
+      "from": "isp1",
+      "to": "dl380",
+      "toPort": "p1",
+      "color": "#DC2626",
+      "width": 3,
+      "label": "Kerio WAN1"
+    },
+    {
+      "from": "isp2",
+      "to": "dl380",
+      "toPort": "p3",
+      "color": "#DC2626",
+      "width": 3,
+      "label": "Kerio WAN2 + pfSense WAN"
+    },
+    {
+      "from": "dl380",
+      "to": "aruba",
+      "fromPort": "p2",
+      "toPort": "p1",
+      "color": "#111827",
+      "width": 3,
+      "label": "Trunk",
+      "meaning": "Trunk — 802.1Q, все VLAN"
+    },
+    {
+      "from": "dl20",
+      "to": "aruba",
+      "fromPort": "p1",
+      "toPort": "p13",
+      "color": "#7C3AED",
+      "width": 2,
+      "meaning": "VLAN 1 — Server Farm · 10.30.25.0/24"
+    },
+    {
+      "from": "aruba",
+      "to": "sw_undnzv",
+      "fromPort": "p8",
+      "toPort": "p1",
+      "color": "#2563EB",
+      "width": 2,
+      "meaning": "VLAN 10 — LAN · рабочие места"
+    },
+    {
+      "from": "aruba",
+      "to": "sw_sales",
+      "fromPort": "p6",
+      "toPort": "p1",
+      "color": "#2563EB",
+      "width": 2
+    },
+    {
+      "from": "aruba",
+      "to": "poe_street",
+      "fromPort": "p5",
+      "toPort": "p16",
+      "color": "#059669",
+      "width": 2,
+      "meaning": "VLAN 55 — видеонаблюдение / СКУД"
+    },
+    {
+      "from": "aruba",
+      "to": "aphq03",
+      "fromPort": "p4",
+      "color": "#111827",
+      "width": 3,
+      "label": "Trunk"
+    },
+    {
+      "from": "sw_undnzv",
+      "to": "laptops_undnzv",
+      "color": "#9CA3AF",
+      "meaning": "Подключение оконечных устройств"
+    },
+    {
+      "from": "sw_undnzv",
+      "to": "cam_undnzv",
+      "color": "#059669"
+    },
+    {
+      "from": "sw_sales",
+      "to": "mono_sales",
+      "color": "#9CA3AF"
+    },
+    {
+      "from": "sw_sales",
+      "to": "cam_sales",
+      "color": "#059669"
+    },
+    {
+      "from": "sw_sales",
+      "to": "scud_sales",
+      "color": "#059669"
+    },
+    {
+      "from": "poe_street",
+      "to": "cam_street",
+      "color": "#059669"
+    },
+    {
+      "from": "poe_street",
+      "to": "cam_street2",
+      "color": "#059669"
+    },
+    {
+      "from": "poe_street",
+      "to": "patchpanel",
+      "color": "#9CA3AF"
+    },
+    {
+      "from": "sw0152",
+      "to": "sw0328",
+      "fromPort": "p47",
+      "toPort": "p24",
+      "color": "#111827",
+      "width": 3,
+      "label": "Trunk"
+    },
+    {
+      "from": "sw0152",
+      "to": "sw0218p",
+      "fromPort": "p45",
+      "toPort": "p16",
+      "color": "#111827",
+      "width": 3,
+      "label": "Trunk"
+    },
+    {
+      "from": "sw0328",
+      "to": "nvr",
+      "fromPort": "p1-22",
+      "color": "#059669",
+      "width": 2
+    },
+    {
+      "from": "sw0152",
+      "to": "laptops_noc",
+      "fromPort": "p5",
+      "color": "#2563EB"
+    },
+    {
+      "from": "sw0152",
+      "to": "cam_noc",
+      "fromPort": "p18",
+      "color": "#059669"
+    },
+    {
+      "from": "sw0452",
+      "to": "sw_cc1",
+      "fromPort": "p28",
+      "toPort": "p1",
+      "color": "#2563EB",
+      "width": 2
+    },
+    {
+      "from": "sw0452",
+      "to": "sw_cc2",
+      "fromPort": "p33",
+      "toPort": "p1",
+      "color": "#2563EB",
+      "width": 2
+    },
+    {
+      "from": "sw0452",
+      "to": "aphq04",
+      "fromPort": "p19",
+      "color": "#111827",
+      "width": 3,
+      "label": "Trunk"
+    },
+    {
+      "from": "sw_cc1",
+      "to": "cam_cc",
+      "color": "#059669"
+    },
+    {
+      "from": "sw_cc1",
+      "to": "scud_cc",
+      "color": "#059669"
+    },
+    {
+      "from": "sw_hall1",
+      "to": "sw_hall2",
+      "color": "#9CA3AF",
+      "dashed": true,
+      "meaning": "Каскад неуправляемых коммутаторов"
+    },
+    {
+      "from": "sw_hall2",
+      "to": "poe_hall",
+      "color": "#9CA3AF",
+      "dashed": true
+    },
+    {
+      "from": "sw_hall1",
+      "to": "laptops_hall",
+      "color": "#9CA3AF"
+    },
+    {
+      "from": "sw_hall2",
+      "to": "printer_hall",
+      "color": "#9CA3AF"
+    },
+    {
+      "from": "poe_hall",
+      "to": "cam_hall",
+      "color": "#059669"
+    },
+    {
+      "from": "poe_hall",
+      "to": "scud_hall",
+      "color": "#059669"
+    },
+    {
+      "from": "sw_hall1",
+      "to": "aphq01",
+      "color": "#111827",
+      "width": 3,
+      "label": "Trunk"
+    },
+    {
+      "from": "sw_acc1",
+      "to": "printer_acc",
+      "color": "#9CA3AF"
+    },
+    {
+      "from": "sw_acc2",
+      "to": "cam_acc",
+      "color": "#059669"
+    },
+    {
+      "from": "sw_acc3",
+      "to": "laptops_acc",
+      "color": "#9CA3AF"
+    },
+    {
+      "from": "sw_acc3",
+      "to": "aphq02",
+      "color": "#111827",
+      "width": 3,
+      "label": "Trunk"
+    }
   ],
-
   "legend": {
     "pageName": "Легенда · Legend",
     "title": "Условные обозначения · Legend",
     "portsTitle": "КАРТА ПОРТОВ · PORT ASSIGNMENT",
     "assumptionsTitle": "ДОПУЩЕНИЯ · ASSUMPTIONS TO CONFIRM",
     "extra": [
-      {"color": "#EA580C", "meaning": "VLAN 22 — сегмент pfSense"},
-      {"color": "#DB2777", "meaning": "VLAN 20 — WLAN · корпоративный Wi-Fi (в границе AP)"},
-      {"color": "#CA8A04", "meaning": "VLAN 130 — WGuest · гостевой Wi-Fi (в границе AP)"},
-      {"color": "#9CA3AF", "meaning": "Объявлены, но не назначены на порты: VLAN 40 · VoIP | VLAN 50 · CCTV | VLAN 99 · Management"}
+      {
+        "color": "#EA580C",
+        "meaning": "VLAN 22 — сегмент pfSense"
+      },
+      {
+        "color": "#DB2777",
+        "meaning": "VLAN 20 — WLAN · корпоративный Wi-Fi (в границе AP)"
+      },
+      {
+        "color": "#CA8A04",
+        "meaning": "VLAN 130 — WGuest · гостевой Wi-Fi (в границе AP)"
+      },
+      {
+        "color": "#9CA3AF",
+        "meaning": "Объявлены, но не назначены на порты: VLAN 40 · VoIP | VLAN 50 · CCTV | VLAN 99 · Management"
+      }
     ],
     "ports": {
       "Aruba 1930": "VLAN 1: 2, 7, 9-23 · VLAN 10: 6, 8 · VLAN 55: 5 · Trunk: 1, 3, 4 · UpLink: 1",

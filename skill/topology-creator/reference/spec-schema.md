@@ -41,6 +41,7 @@ One entry per draw.io page.
 | `width` | number | Force a width in px. Rarely needed. |
 | `nodes` | string[] | Node ids placed in this zone's grid. |
 | `zones` | object[] | Nested zones, stacked below this zone's own nodes. |
+| `zonesFirst` | bool | Render nested zones *above* this zone's own devices. Use when the zone's devices uplink to whatever sits below — it puts them at the bottom edge so the uplink doesn't cross the nested boxes. |
 
 `row` only applies to top-level zones. Nested zones always stack vertically.
 
