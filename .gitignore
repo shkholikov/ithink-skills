@@ -1,12 +1,12 @@
-# Source JPEGs for the icon converter. The converted PNGs in
-# skill/topology-creator/assets/icons/ are committed, so this folder is only
-# needed if you want to regenerate them.
-cisco icons/
+# Source JPEGs for topology-creator's icon converter. The converted PNGs in
+# topology-creator/assets/icons/ are committed, so this folder is only needed if
+# you want to regenerate them.
+topology-creator/cisco icons/
 
 __pycache__/
 *.pyc
 .DS_Store
 .remember/
 
-# Build artefact — attach to a GitHub Release instead of committing.
-topology-creator-skill.zip
+# Build artefacts — attach to a GitHub Release instead of committing.
+*-skill.zip

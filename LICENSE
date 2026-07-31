@@ -25,6 +25,6 @@ SOFTWARE.
 NOTE ON BUNDLED ICONS
 
 This licence covers the source code only. The network icons in
-skill/topology-creator/assets/icons/ are derived from the Cisco Network Topology
+topology-creator/assets/icons/ are derived from the Cisco Network Topology
 Icon library and remain the property of Cisco Systems, Inc. They are NOT covered
 by the MIT licence above. Refer to Cisco's own terms of use for that icon set.
