@@ -1,6 +1,5 @@
 {
   "_comment": "Everyday network vocabulary -> Cisco icon slug. Keys are lowercase-hyphenated. The resolver tries icons.json first, then this table, then a token fallback.",
-
   "internet": "cloud",
   "www": "cloud",
   "wan": "cloud",
@@ -13,7 +12,6 @@
   "gateway": "generic-gateway",
   "modem": "modem",
   "dsl": "ip-dsl",
-
   "fw": "firewall",
   "utm": "firewall",
   "ngfw": "pix-firewall",
@@ -24,7 +22,6 @@
   "ids": "netranger",
   "ips": "netranger",
   "waf": "ios-firewall",
-
   "switch": "workgroup-switch",
   "sw": "workgroup-switch",
   "managed-switch": "workgroup-switch",
@@ -44,7 +41,6 @@
   "stack": "intelliswitch-stack",
   "patch-panel": "breakout-box",
   "patchpanel": "breakout-box",
-
   "ap": "accesspoint",
   "access-point": "accesspoint",
   "wifi": "accesspoint",
@@ -54,7 +50,6 @@
   "wifi-controller": "wlan-controller",
   "wireless-ap": "accesspoint",
   "mesh": "mesh-ap",
-
   "server": "file-server",
   "srv": "file-server",
   "app-server": "www-server",
@@ -81,17 +76,16 @@
   "monitoring": "network-management",
   "zabbix": "network-management",
   "grafana": "network-management",
-  "hypervisor": "host",
-  "vm": "host",
-  "esxi": "host",
-  "vmware": "host",
-  "proxmox": "host",
-  "hyper-v": "host",
+  "hypervisor": "standard-host",
+  "vm": "standard-host",
+  "esxi": "standard-host",
+  "vmware": "standard-host",
+  "proxmox": "standard-host",
+  "hyper-v": "standard-host",
   "nas": "storage-server",
   "san": "fc-storage",
   "storage": "storage-server",
   "backup": "tape-array",
-
   "camera": "video-camera",
   "ip-camera": "video-camera",
   "ipcam": "video-camera",
@@ -99,7 +93,6 @@
   "nvr": "storage-server",
   "dvr": "storage-server",
   "recorder": "storage-server",
-
   "laptop": "laptop",
   "notebook": "laptop",
   "desktop": "workstation",
@@ -115,13 +108,11 @@
   "mobile": "cellular-phone",
   "smartphone": "cellular-phone",
   "tv": "tv",
-
   "phone": "ip-phone",
   "voip": "ip-phone",
   "sip": "ip-phone",
   "pbx": "pbx",
   "ats": "pbx",
-
   "ups": "ups",
   "access-control": "terminal",
   "acs": "acs",
@@ -135,5 +126,7 @@
   "load-balancer": "localdirector",
   "lb": "localdirector",
   "proxy": "content-engine-cache-director",
-  "cache": "content-engine-cache-director"
+  "cache": "content-engine-cache-director",
+  "blade": "standard-host",
+  "rack-server": "standard-host"
 }

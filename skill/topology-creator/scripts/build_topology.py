@@ -29,7 +29,7 @@ ICON_BOX_H = 62
 CELL_W = 150             # horizontal pitch between nodes
 CELL_H = 152             # vertical pitch; the gap under the icon holds labels
 ZONE_PAD_X = 26
-ZONE_PAD_TOP = 40        # room for the zone's own header label
+ZONE_PAD_TOP = 62        # room for the zone header plus any port label under it
 ZONE_PAD_BOTTOM = 22
 ZONE_GAP = 34            # between sibling zones
 PAGE_MARGIN = 40
@@ -284,6 +284,7 @@ def node_style(node: dict, icons: IconLibrary) -> str:
     return (
         "shape=image;html=1;imageAspect=0;aspect=fixed;labelBackgroundColor=none;"
         "verticalLabelPosition=bottom;verticalAlign=top;align=center;"
+        "whiteSpace=wrap;labelWidth=142;"
         f"fontSize=11;fontColor=#111827;image={uri}"
     )
 
@@ -299,7 +300,7 @@ def port_label_offset(side_x, side_y, index: int = 0) -> tuple[int, int]:
     if side_y == 1:      # link leaves/enters the bottom edge
         return 22 + index * 30, 46
     if side_y == 0:      # top edge
-        return 22 + index * 30, -20
+        return 22 + index * 30, -17
     if side_x == 1:      # right edge
         return 20, -13 + index * 15
     if side_x == 0:      # left edge
@@ -452,8 +453,14 @@ def build_page(xml: XmlBuilder, page: dict, spec: dict,
 
     for link, resolved in drawable:
         eid = xml.next_id("e")
-        xml.edge(eid, link.get("label", ""), edge_style({**link, **resolved}), root,
+        # The mid-line label is a child cell rather than the edge's own value,
+        # so links converging on one device can stagger their labels instead of
+        # printing on top of each other.
+        xml.edge(eid, "", edge_style({**link, **resolved}), root,
                  cell_ids[link["from"]], cell_ids[link["to"]])
+        if link.get("label"):
+            n = stagger(link["to"], "mid", None)
+            xml.edge_label(xml.next_id("m"), link["label"], eid, 0, 0, n * 16)
         # Pin port labels to the exact endpoint, then nudge them in pixels away
         # from the side the link leaves on. A fractional position alone lands
         # them on top of the icon's caption whenever the link runs vertically.
@@ -501,6 +508,13 @@ def build_legend_page(xml: XmlBuilder, spec: dict) -> str:
     for link in spec.get("links", []):
         key = (link.get("color", DEFAULT_LINK_COLOR), bool(link.get("dashed")),
                link.get("meaning", ""))
+        if key[2] and key not in seen:
+            seen.append(key)
+    # Some VLANs never appear as a drawn link -- guest wi-fi rides an existing
+    # trunk as an SSID, for instance -- so let a spec add legend rows by hand.
+    for row in legend.get("extra", []):
+        key = (row.get("color", DEFAULT_LINK_COLOR), bool(row.get("dashed")),
+               row.get("meaning", ""))
         if key[2] and key not in seen:
             seen.append(key)
 
