@@ -1,0 +1,123 @@
+{
+  "title": "HR Portal (Aslzar) — Hardware & Network Topology",
+
+  "pages": [
+    {
+      "name": "HR Portal",
+      "header": {
+        "title": "HR Portal (Aslzar) — Hardware & Network Topology",
+        "subtitle": "On-prem Ubuntu VPS + Docker on the same private LAN as the Hikvision terminals · web/admin on Vercel · bot on Telegram"
+      },
+      "nodes": ["internet"],
+      "zones": [
+        {
+          "id": "cloud",
+          "label": "Managed cloud (off-site)",
+          "color": "#2563EB",
+          "dash": "dashed",
+          "row": 0,
+          "cols": 2,
+          "nodes": ["vercel", "telegram"]
+        },
+        {
+          "id": "edge",
+          "label": "Branch edge",
+          "color": "#DC2626",
+          "dash": "solid",
+          "row": 1,
+          "cols": 1,
+          "nodes": ["gateway"]
+        },
+        {
+          "id": "lancore",
+          "label": "LAN core",
+          "color": "#111827",
+          "dash": "solid",
+          "row": 2,
+          "cols": 1,
+          "nodes": ["lanswitch"]
+        },
+        {
+          "id": "onprem",
+          "label": "On-prem server · Ubuntu VPS (Docker host)",
+          "color": "#7C3AED",
+          "dash": "dashed",
+          "row": 3,
+          "zones": [
+            {
+              "id": "docker",
+              "label": "Docker network (compose)",
+              "color": "#7C3AED",
+              "dash": "dotted",
+              "cols": 2,
+              "nodes": ["nginx", "api", "bot", "postgres"]
+            }
+          ]
+        },
+        {
+          "id": "acs",
+          "label": "Access-control terminals (per branch)",
+          "color": "#059669",
+          "dash": "solid",
+          "row": 3,
+          "cols": 1,
+          "nodes": ["hikvision"]
+        }
+      ]
+    }
+  ],
+
+  "nodes": [
+    {"id": "internet", "icon": "internet", "label": "Internet"},
+
+    {"id": "vercel", "icon": "web-server", "label": "Vercel",
+     "sub": "web + admin · aslzarhr.uz"},
+    {"id": "telegram", "icon": "web-server", "label": "Telegram Bot API",
+     "sub": "api.telegram.org · external", "badges": ["3rd-party"]},
+
+    {"id": "gateway", "icon": "isp-router", "label": "Branch gateway / ISP router",
+     "sub": "public IP · api.aslzarhr.uz"},
+    {"id": "lanswitch", "icon": "switch", "label": "LAN switch",
+     "sub": "shared private network"},
+
+    {"id": "nginx", "icon": "web-server", "label": "nginx",
+     "sub": "reverse proxy + TLS (certbot)"},
+    {"id": "api", "icon": "app-server", "label": "api", "sub": "Express 5 · :4000"},
+    {"id": "bot", "icon": "server", "label": "bot", "sub": "grammY · long polling"},
+    {"id": "postgres", "icon": "database", "label": "postgres",
+     "sub": "PostgreSQL · :5432"},
+
+    {"id": "hikvision", "icon": "access-control", "label": "Hikvision face terminals",
+     "sub": "1+ per branch entrance", "badges": ["ISAPI"]}
+  ],
+
+  "links": [
+    {"from": "internet", "to": "gateway", "toPort": "WAN",
+     "color": "#DC2626", "width": 3, "meaning": "WAN / public internet"},
+    {"from": "internet", "to": "vercel", "color": "#2563EB", "width": 2,
+     "meaning": "HTTPS · public web"},
+    {"from": "internet", "to": "telegram", "color": "#EA580C", "width": 2,
+     "dashed": true, "label": "outbound only",
+     "meaning": "Bot API — outbound only"},
+
+    {"from": "gateway", "to": "lanswitch", "fromPort": "LAN",
+     "color": "#111827", "width": 3, "meaning": "LAN uplink"},
+
+    {"from": "lanswitch", "to": "nginx", "toPort": "eth0 :443",
+     "color": "#2563EB", "width": 2, "meaning": "HTTPS · private LAN"},
+    {"from": "lanswitch", "to": "hikvision", "fromPort": "PoE / LAN",
+     "color": "#059669", "width": 2, "meaning": "Terminals · PoE / LAN"},
+
+    {"from": "nginx", "to": "api", "toPort": ":4000", "color": "#111827",
+     "meaning": "Container-to-container"},
+    {"from": "api", "to": "postgres", "toPort": ":5432", "color": "#7C3AED"},
+    {"from": "bot", "to": "postgres", "toPort": ":5432", "color": "#7C3AED"}
+  ],
+
+  "legend": {
+    "title": "Legend",
+    "assumptions": [
+      "1 — Reconstructed from a screenshot to exercise the router; ports and hostnames may not match the real deployment."
+    ]
+  }
+}

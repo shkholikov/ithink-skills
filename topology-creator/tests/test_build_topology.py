@@ -211,6 +211,24 @@ class TestRouting(unittest.TestCase):
         self.assertTrue(obs.free((26, 17), allow=("a",)),
                         "its own icon box must stay reachable")
 
+    def test_shared_lane_and_crossing_are_tracked_separately(self):
+        """Two links overlapping in a lane and two crossing at right angles are
+        different problems; the router has to be able to tell them apart."""
+        obs = self.routing.Obstacles(600, 400)
+        used = {}
+        self.routing.plan((60, 200), (540, 200), obs, used, allow=())
+        lanes = [v for v in used.values() if v[0] and not v[1]]
+        self.assertTrue(lanes, "a horizontal run should register on the h axis")
+        self.assertTrue(all(v[1] == 0 for v in used.values()),
+                        "a purely horizontal run must not mark the v axis")
+
+    def test_zone_border_is_penalised(self):
+        obs = self.routing.Obstacles(600, 400)
+        obs.add_zone(200, 100, 200, 200, "z")
+        on_border = obs.zone_penalty((20, 15), frozenset({"z"}))
+        self.assertGreater(on_border, 0,
+                           "running along a zone outline should cost something")
+
     def test_zone_crossing_is_penalised_not_forbidden(self):
         obs = self.routing.Obstacles(600, 400)
         obs.add_zone(150, 100, 300, 200, "other")

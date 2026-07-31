@@ -21,9 +21,12 @@ import heapq
 
 GRID = 10               # planning resolution in px; finer is slower, not better
 TURN_COST = 14          # discourage staircases
-REUSE_COST = 9          # nudge parallel links into their own lane
+REUSE_COST = 9          # two links sharing a lane: keep them apart
+CROSS_COST = 11         # two links crossing at right angles: prefer not to
 CLEARANCE = 8           # keep this far off icons and text
 ZONE_CROSS_COST = 7     # prefer the margins over cutting through a zone
+BORDER_COST = 5         # do not run along a zone's drawn border
+BORDER_BAND = 7         # how wide that border band is, in px
 
 # (dx, dy) per direction index
 STEPS = ((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -45,6 +48,7 @@ class Obstacles:
         self.blocked: set[tuple[int, int]] = set()
         self.owner: dict[tuple[int, int], str] = {}
         self.zones: dict[tuple[int, int], tuple] = {}
+        self.borders: dict[tuple[int, int], int] = {}
 
     def add_rect(self, x, y, w, h, owner: str | None = None,
                  clearance: float | None = None) -> None:
@@ -58,9 +62,18 @@ class Obstacles:
                 self.owner.pop(cell, None)
 
     def add_zone(self, x, y, w, h, zone_id: str) -> None:
-        """Zone interiors are passable but discouraged -- see ZONE_CROSS_COST."""
+        """Zone interiors are passable but discouraged -- see ZONE_CROSS_COST.
+
+        The drawn border gets its own penalty on top: a link running *along* a
+        zone outline is indistinguishable from the outline itself.
+        """
         for cell in self._cells(x, y, w, h, 0):
             self.zones[cell] = self.zones.get(cell, ()) + (zone_id,)
+        b = BORDER_BAND
+        for edge in ((x, y, w, 0), (x, y + h, w, 0),
+                     (x, y, 0, h), (x + w, y, 0, h)):
+            for cell in self._cells(edge[0], edge[1], edge[2], edge[3], b):
+                self.borders[cell] = self.borders.get(cell, 0) + 1
 
     def _cells(self, x, y, w, h, clearance: float | None = None):
         pad = CLEARANCE if clearance is None else clearance
@@ -82,10 +95,11 @@ class Obstacles:
         return self.owner.get(cell) in allow
 
     def zone_penalty(self, cell, allow_zones: frozenset) -> float:
+        cost = BORDER_COST * self.borders.get(cell, 0)
         crossed = self.zones.get(cell)
-        if not crossed:
-            return 0.0
-        return ZONE_CROSS_COST * sum(1 for z in crossed if z not in allow_zones)
+        if crossed:
+            cost += ZONE_CROSS_COST * sum(1 for z in crossed if z not in allow_zones)
+        return cost
 
 
 def _to_grid(point) -> tuple[int, int]:
@@ -145,7 +159,10 @@ def plan(start, end, obstacles: Obstacles, used: dict,
             step = 1.0
             if direction != -1 and i != direction:
                 step += TURN_COST
-            step += REUSE_COST * used.get(nxt, 0)
+            lanes = used.get(nxt)
+            if lanes:
+                axis = 0 if i < 2 else 1
+                step += REUSE_COST * lanes[axis] + CROSS_COST * lanes[1 - axis]
             step += obstacles.zone_penalty(nxt, allow_zones)
             ncost = cost + step
             nstate = (nxt, i)
@@ -164,8 +181,13 @@ def plan(start, end, obstacles: Obstacles, used: dict,
         state = parents.get(state)
     cells.reverse()
 
-    for c in cells:
-        used[c] = used.get(c, 0) + 1
+    # Record which axis each cell was traversed on, so later links can tell a
+    # shared lane (bad) from a right-angle crossing (also bad, differently).
+    for prev, cur in zip(cells, cells[1:]):
+        axis = 0 if prev[1] == cur[1] else 1
+        for c in (prev, cur):
+            lanes = used.setdefault(c, [0, 0])
+            lanes[axis] += 1
 
     return _simplify([(c[0] * GRID, c[1] * GRID) for c in cells])
 
