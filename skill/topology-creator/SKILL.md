@@ -76,6 +76,29 @@ Key rules:
 - `meaning` on a link is what makes it appear in the legend. Links sharing a
   colour only need it once.
 
+## Routing — links never cross icons or text
+
+`scripts/routing.py` plans every link around every icon, caption and zone
+header, then writes explicit waypoints into the file. This is the single
+biggest thing that makes a generated diagram readable, and it is automatic —
+you do not configure it.
+
+Two levers if a path still looks wrong:
+
+- **`zonesFirst: true`** on a zone renders its nested zones *above* its own
+  devices. Use it when a zone's devices uplink downward: it puts them on the
+  bottom edge so the uplink has a short, clear run.
+- **Order matters inside a zone.** Put the device that terminates a long link
+  first, nearest whatever it connects to. A switch at the far end of a zone
+  drags its uplink across the whole diagram.
+
+Structural advice that beats both: give a core or distribution switch its own
+zone in its own `row`, between the servers above and the access zones below.
+Short links route cleanly; long ones have to detour around everything.
+
+If routing genuinely cannot find a path it emits no waypoints and lets draw.io
+route — the build never fails over layout.
+
 ## Icon names
 
 Use plain vocabulary — `switch`, `firewall`, `l3-switch`, `poe-switch`, `ap`,

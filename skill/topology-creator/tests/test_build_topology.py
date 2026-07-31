@@ -174,6 +174,77 @@ class TestIconResolution(unittest.TestCase):
         self.assertIsNone(self.icons.resolve("quantum-flux-capacitor"))
 
 
+class TestRouting(unittest.TestCase):
+    """The router exists so links stop crossing icons and captions."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import routing
+        self.routing = routing
+
+    def test_path_goes_around_a_blocking_box(self):
+        obs = self.routing.Obstacles(600, 400)
+        obs.add_rect(200, 100, 120, 120, owner="wall")
+        path = self.routing.plan((100, 160), (500, 160), obs, {}, allow=())
+        self.assertTrue(path, "expected a route around the obstacle")
+        for x, y in path:
+            inside = (200 <= x <= 320) and (100 <= y <= 220)
+            self.assertFalse(inside, f"waypoint {(x, y)} sits inside the obstacle")
+
+    def test_endpoints_may_start_inside_their_own_footprint(self):
+        obs = self.routing.Obstacles(600, 400)
+        obs.add_rect(90, 150, 40, 40, owner="a")
+        obs.add_rect(470, 150, 40, 40, owner="b")
+        self.assertTrue(
+            self.routing.plan((110, 170), (490, 170), obs, {}, allow=("a", "b"))
+            is not None
+        )
+
+    def test_no_route_returns_empty_not_an_error(self):
+        obs = self.routing.Obstacles(400, 400)
+        # Wall spans wider than the planning grid, so there is genuinely no way
+        # around it. The build must degrade to "no waypoints", never raise.
+        obs.add_rect(-500, 150, 1500, 60, owner="wall")
+        path = self.routing.plan((50, 50), (50, 350), obs, {}, allow=())
+        self.assertEqual(path, [])
+
+    def test_clear_straight_run_needs_no_waypoints(self):
+        obs = self.routing.Obstacles(600, 400)
+        path = self.routing.plan((100, 200), (500, 200), obs, {}, allow=())
+        self.assertEqual(path, [], "a straight line should not emit corners")
+
+    def test_second_link_avoids_reusing_the_first_corridor(self):
+        obs = self.routing.Obstacles(600, 400)
+        used = {}
+        first = self.routing.plan((60, 200), (540, 200), obs, used, allow=())
+        second = self.routing.plan((60, 200), (540, 200), obs, used, allow=())
+        self.assertNotEqual(first, second,
+                            "reuse penalty should push the second link aside")
+
+    def test_generated_edges_carry_waypoints(self):
+        # Three stacked zones: the blocker sits directly between a and b, so
+        # the only legal path has to detour around it.
+        spec = {
+            "pages": [{
+                "name": "P",
+                "zones": [
+                    {"id": "top", "label": "Top", "row": 0, "nodes": ["a"]},
+                    {"id": "mid", "label": "Mid", "row": 1, "nodes": ["blocker"]},
+                    {"id": "bot", "label": "Bottom", "row": 2, "nodes": ["b"]},
+                ],
+            }],
+            "nodes": [
+                {"id": "a", "icon": "router", "label": "A"},
+                {"id": "blocker", "icon": "server", "label": "In the way"},
+                {"id": "b", "icon": "switch", "label": "B"},
+            ],
+            "links": [{"from": "a", "to": "b"}],
+        }
+        code, _, _, text = run(spec)
+        self.assertEqual(code, 0)
+        self.assertIn('<Array as="points">', text)
+
+
 class TestExample(unittest.TestCase):
 
     def test_shipped_example_builds_clean(self):

@@ -6,8 +6,11 @@ sandbox on Desktop and mobile, where nothing can be installed.
 
 Layout is a zone grid. Zones are boxes placed in rows; nodes flow left to
 right inside their zone; nested zones stack under their parent's nodes.
-Links are *declarative* -- draw.io routes them orthogonally when the file is
-opened, so this script never computes a path.
+
+Links are routed here rather than left to draw.io. draw.io's router only knows
+the two endpoints, so on a dense diagram it draws straight through icons and
+captions and the result is unreadable. See routing.py: paths are planned around
+every icon, caption and zone header, then emitted as explicit waypoints.
 
 Usage:
     build_topology.py spec.json -o out.drawio
@@ -20,6 +23,8 @@ import json
 import sys
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
+
+import routing
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
 
@@ -207,11 +212,64 @@ def layout_page(page: dict, nodes_by_id: dict, icons: IconLibrary) -> None:
 def assign_absolute(zone: dict, ox: float, oy: float, nodes_by_id: dict) -> None:
     box = zone["_box"]
     zx, zy = ox + box.x, oy + box.y
+    zone["_abs"] = Box(zx, zy, box.w, box.h)
     for nid in zone.get("nodes", []):
         b = nodes_by_id[nid]["_box"]
         nodes_by_id[nid]["_abs"] = Box(zx + b.x, zy + b.y, b.w, b.h)
     for child in zone.get("zones", []):
         assign_absolute(child, zx, zy, nodes_by_id)
+
+
+def caption_box(node: dict) -> Box:
+    """Where the icon's caption text lands. The router must avoid this too --
+    a line through a device name is exactly what makes a diagram unreadable."""
+    b = node["_abs"]
+    height = 17                                   # bold title line
+    if node.get("sub"):
+        height += 13
+    height += 12 * len(node.get("badges", []))
+    width = 146
+    return Box(b.x + b.w / 2 - width / 2, b.y + b.h + 2, width, height)
+
+
+def collect_obstacles(page: dict, nodes_by_id: dict, placed_ids: list):
+    """Every icon, caption and zone header on the page, plus the page extent."""
+    rects = []
+
+    def walk(zone: dict) -> None:
+        zb = zone["_abs"]
+        if zone.get("label"):
+            header_w = min(zb.w - 12, 8.5 * len(zone["label"]) + 16)
+            rects.append((Box(zb.x + 6, zb.y + 2, header_w, 24), None))
+        for child in zone.get("zones", []):
+            walk(child)
+
+    for zone in page.get("zones", []):
+        walk(zone)
+
+    for nid in placed_ids:
+        node = nodes_by_id[nid]
+        rects.append((node["_abs"], nid))
+        rects.append((caption_box(node), nid))
+
+    right = max((r.x + r.w for r, _ in rects), default=1000)
+    bottom = max((r.y + r.h for r, _ in rects), default=1000)
+
+    obstacles = routing.Obstacles(right + 220, bottom + 220)
+    for rect, owner in rects:
+        obstacles.add_rect(rect.x, rect.y, rect.w, rect.h, owner)
+    return obstacles
+
+
+# Which way a path leaves a given anchor side, as an index into routing.STEPS.
+_LEAVE = {(1, 0.5): 0, (0, 0.5): 1, (0.5, 1): 2, (0.5, 0): 3}
+# Which way a path must be travelling when it arrives at a given anchor side.
+_ARRIVE = {(0, 0.5): 0, (1, 0.5): 1, (0.5, 0): 2, (0.5, 1): 3}
+
+
+def anchor_point(node: dict, ax, ay) -> tuple[float, float]:
+    b = node["_abs"]
+    return b.x + ax * b.w, b.y + ay * b.h
 
 
 def auto_anchors(src: dict, dst: dict) -> dict:
@@ -367,12 +425,26 @@ class XmlBuilder:
         )
 
     def edge(self, cid: str, value: str, style: str, parent: str,
-             source: str, target: str) -> None:
+             source: str, target: str, waypoints=None) -> None:
+        if waypoints:
+            points = "".join(
+                f'              <mxPoint x="{x:.0f}" y="{y:.0f}" />\n'
+                for x, y in waypoints
+            )
+            geometry = (
+                '          <mxGeometry relative="1" as="geometry">\n'
+                '            <Array as="points">\n'
+                f'{points}'
+                '            </Array>\n'
+                '          </mxGeometry>\n'
+            )
+        else:
+            geometry = '          <mxGeometry relative="1" as="geometry" />\n'
         self.parts.append(
             f'        <mxCell id={quoteattr(cid)} value={quoteattr(value)} '
             f'style={quoteattr(style)} edge="1" parent={quoteattr(parent)} '
             f'source={quoteattr(source)} target={quoteattr(target)}>\n'
-            f'          <mxGeometry relative="1" as="geometry" />\n'
+            f'{geometry}'
             f'        </mxCell>\n'
         )
 
@@ -465,13 +537,41 @@ def build_page(xml: XmlBuilder, page: dict, spec: dict,
         rank[key] = rank.get(key, -1) + 1
         return rank[key]
 
-    for link, resolved in drawable:
+    # Plan paths around icons, captions and zone headers. Longest links first:
+    # they have the fewest viable corridors, so they get to claim one before
+    # the short links start filling lanes up.
+    obstacles = collect_obstacles(page, nodes_by_id, list(cell_ids))
+    used: dict = {}
+
+    def span(item) -> float:
+        a = nodes_by_id[item[0]["from"]]["_abs"]
+        b = nodes_by_id[item[0]["to"]]["_abs"]
+        return abs(a.x - b.x) + abs(a.y - b.y)
+
+    waypoints_for = {}
+    for index in sorted(range(len(drawable)), key=lambda i: -span(drawable[i])):
+        link, resolved = drawable[index]
+        src, dst = nodes_by_id[link["from"]], nodes_by_id[link["to"]]
+        exit_side = (resolved.get("exitX"), resolved.get("exitY"))
+        entry_side = (resolved.get("entryX"), resolved.get("entryY"))
+        path = routing.plan(
+            anchor_point(src, *exit_side),
+            anchor_point(dst, *entry_side),
+            obstacles, used,
+            allow=(link["from"], link["to"]),
+            start_dir=_LEAVE.get(exit_side),
+            end_dir=_ARRIVE.get(entry_side),
+        )
+        waypoints_for[index] = path
+
+    for index, (link, resolved) in enumerate(drawable):
         eid = xml.next_id("e")
         # The mid-line label is a child cell rather than the edge's own value,
         # so links converging on one device can stagger their labels instead of
         # printing on top of each other.
         xml.edge(eid, "", edge_style({**link, **resolved}), root,
-                 cell_ids[link["from"]], cell_ids[link["to"]])
+                 cell_ids[link["from"]], cell_ids[link["to"]],
+                 waypoints_for.get(index))
         if link.get("label"):
             n = stagger(link["to"], "mid", None)
             xml.edge_label(xml.next_id("m"), link["label"], eid, 0, 0, n * 16)

@@ -88,9 +88,11 @@ for a complete worked spec.
 - **Layout** is a zone grid: zones are boxes placed in rows, devices flow left to
   right inside them, nested zones stack underneath. Deterministic — the same spec
   always gives the same diagram.
-- **Links are declarative.** draw.io routes them orthogonally when the file opens,
-  so the generator never computes a path. It only picks which side of each icon a
-  link attaches to, by comparing the two nodes' absolute positions.
+- **Links are routed here, not by draw.io.** draw.io's router only knows the two
+  endpoints, so on a dense diagram it draws straight through icons and captions.
+  `routing.py` plans each path on a grid that knows where every icon, caption and
+  zone header sits — A* with a turn penalty (paths stay straight) and a reuse
+  penalty (parallel links take their own lane) — then emits explicit waypoints.
 - **Icons are embedded** as base64 PNG, so a `.drawio` file is self-contained and
   opens anywhere with no missing assets.
 - **Stdlib only.** No pip install, nothing to break in a sandbox.
@@ -113,8 +115,9 @@ placeholder box and prints a warning; it never fails the build.
 cd skill/topology-creator && python3 tests/test_build_topology.py
 ```
 
-18 tests: the five hard-error cases, icon alias resolution, base64 embedding,
-legend generation, and a clean build of the shipped example.
+24 tests: the five hard-error cases, icon alias resolution, base64 embedding,
+legend generation, obstacle avoidance in the router, and a clean build of the
+shipped example.
 
 ## Regenerating the icons
 
