@@ -1,0 +1,106 @@
+{
+  "title": "Small office",
+
+  "pages": [
+    {
+      "name": "Office",
+      "header": {
+        "title": "Small office network",
+        "subtitle": "1 ISP · 1 firewall · VLAN 10 users / VLAN 20 wi-fi / VLAN 55 cctv"
+      },
+      "nodes": ["internet", "isp1"],
+      "zones": [
+        {
+          "id": "serverroom",
+          "label": "Server room",
+          "color": "#DC2626",
+          "dash": "dashed",
+          "row": 0,
+          "cols": 3,
+          "nodes": ["fw", "core", "nas"],
+          "zones": [
+            {
+              "id": "vms",
+              "label": "Virtual machines",
+              "color": "#2563EB",
+              "dash": "dotted",
+              "cols": 3,
+              "nodes": ["ad", "db", "zabbix"]
+            }
+          ]
+        },
+        {
+          "id": "floor1",
+          "label": "Floor 1 · Sales",
+          "color": "#2563EB",
+          "dash": "solid",
+          "row": 1,
+          "cols": 3,
+          "nodes": ["sw1", "pc1", "prn1"]
+        },
+        {
+          "id": "cctv",
+          "label": "CCTV",
+          "color": "#059669",
+          "dash": "solid",
+          "row": 1,
+          "cols": 2,
+          "nodes": ["poe1", "cam1"]
+        }
+      ]
+    }
+  ],
+
+  "nodes": [
+    {"id": "internet", "icon": "internet", "label": "Internet"},
+    {"id": "isp1", "icon": "isp-router", "label": "ISP 1", "sub": "250 Mbps · 1 public IP"},
+    {"id": "fw", "icon": "firewall", "label": "Firewall", "sub": "VLAN 10/20/55 gateway"},
+    {"id": "core", "icon": "l3-switch", "label": "Core switch", "sub": "24G + 4 SFP"},
+    {"id": "nas", "icon": "nas", "label": "NAS", "sub": "backup"},
+    {"id": "ad", "icon": "active-directory", "label": "AD", "sub": "domain controller"},
+    {"id": "db", "icon": "database", "label": "DB", "sub": "PostgreSQL"},
+    {"id": "zabbix", "icon": "zabbix", "label": "Zabbix", "sub": "monitoring"},
+    {"id": "sw1", "icon": "switch", "label": "SW-Sales", "sub": "8 × 1 GbE"},
+    {"id": "pc1", "icon": "workstation", "label": "Workstations", "count": 6},
+    {"id": "prn1", "icon": "printer", "label": "Printer", "count": 1},
+    {"id": "poe1", "icon": "poe-switch", "label": "PoE switch", "sub": "16 × 1 GbE"},
+    {"id": "cam1", "icon": "ip-camera", "label": "IP cameras", "count": 12, "badges": ["VLAN 55"]}
+  ],
+
+  "links": [
+    {"from": "internet", "to": "isp1", "color": "#DC2626", "width": 3,
+     "label": "Fiber", "meaning": "UpLink / WAN"},
+    {"from": "isp1", "to": "fw", "fromPort": "LAN", "toPort": "WAN",
+     "color": "#DC2626", "width": 3, "meaning": "UpLink / WAN"},
+    {"from": "fw", "to": "core", "fromPort": "p2", "toPort": "p1",
+     "color": "#111827", "width": 3, "label": "Trunk",
+     "meaning": "Trunk — 802.1Q, all VLANs"},
+    {"from": "core", "to": "nas", "fromPort": "p24", "color": "#7C3AED",
+     "meaning": "VLAN 1 — server farm"},
+    {"from": "core", "to": "ad", "fromPort": "p21", "color": "#7C3AED"},
+    {"from": "core", "to": "db", "fromPort": "p22", "color": "#7C3AED"},
+    {"from": "core", "to": "zabbix", "fromPort": "p23", "color": "#7C3AED"},
+    {"from": "core", "to": "sw1", "fromPort": "p5", "toPort": "p1",
+     "color": "#2563EB", "width": 2, "meaning": "VLAN 10 — LAN workstations"},
+    {"from": "sw1", "to": "pc1", "color": "#9CA3AF",
+     "meaning": "End-device connection"},
+    {"from": "sw1", "to": "prn1", "color": "#9CA3AF"},
+    {"from": "core", "to": "poe1", "fromPort": "p9", "toPort": "p16",
+     "color": "#059669", "width": 2, "meaning": "VLAN 55 — CCTV"},
+    {"from": "poe1", "to": "cam1", "color": "#059669", "dashed": true,
+     "meaning": "PoE camera runs"}
+  ],
+
+  "legend": {
+    "title": "Legend · Small office",
+    "ports": {
+      "Core switch": "VLAN 1: 21-24 · VLAN 10: 5-8 · VLAN 55: 9-12 · Trunk: 1",
+      "SW-Sales": "VLAN 10: 1-8",
+      "PoE switch": "VLAN 55: 1-16"
+    },
+    "assumptions": [
+      "1 — Camera count is the installed total; ports are grouped, not individually drawn.",
+      "2 — NAS sits on VLAN 1 with the server farm."
+    ]
+  }
+}
