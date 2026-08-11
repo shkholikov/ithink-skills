@@ -1,0 +1,240 @@
+<title>ITHINK — Коммерческое предложение</title>
+
+<style>
+@@INTER@@
+
+:root {
+  --blue: #377dff;
+  --navy: #1a2138;
+  --ink: #1e2022;
+  --paper: #f7faff;
+  --surface: #eeeeef;
+  --white: #ffffff;
+
+  --line: rgba(26, 33, 56, 0.12);
+  --line-strong: rgba(26, 33, 56, 0.24);
+  --ink-soft: rgba(30, 32, 34, 0.64);
+  --ink-faint: rgba(30, 32, 34, 0.44);
+  --blue-soft: rgba(55, 125, 255, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.doc { max-width: 860px; margin: 0 auto; padding: 40px 32px 64px; }
+
+/* ---------- cover ---------- */
+
+.cover { padding: 8px 0 40px; border-bottom: 2px solid var(--navy); }
+.cover img { width: 190px; height: auto; display: block; }
+.cover .kind {
+  margin-top: 36px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--blue);
+}
+.cover h1 {
+  margin: 10px 0 0;
+  font-size: 44px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+  color: var(--navy);
+}
+.cover .client { margin-top: 14px; font-size: 18px; color: var(--ink-soft); }
+.cover .meta {
+  margin-top: 28px; display: flex; flex-wrap: wrap; gap: 28px;
+  font-size: 13px; color: var(--ink-faint);
+}
+.cover .meta b { display: block; color: var(--ink); font-weight: 600; }
+
+/* ---------- structure ---------- */
+
+section { margin-top: 48px; }
+
+.eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--blue); margin-bottom: 8px;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 26px; font-weight: 600; letter-spacing: -0.01em; color: var(--navy);
+}
+
+h3 { margin: 28px 0 8px; font-size: 18px; font-weight: 600; color: var(--navy); }
+
+p { margin: 0 0 14px; max-width: 68ch; }
+.lead { font-size: 17px; color: var(--ink-soft); }
+
+/* ---------- tables ---------- */
+
+table {
+  width: 100%; border-collapse: collapse; margin: 8px 0 4px;
+  font-size: 14px; background: var(--white);
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+}
+th {
+  background: var(--navy); color: var(--white);
+  font-weight: 600; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase;
+  text-align: left; padding: 12px 14px;
+}
+td { padding: 13px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+tbody tr:nth-child(even) td { background: var(--surface); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.total td {
+  border-top: 2px solid var(--line-strong);
+  font-weight: 600; font-size: 15px; background: var(--white);
+}
+tr.pick td { background: var(--blue-soft); }
+tr.pick td:first-child { box-shadow: inset 3px 0 0 var(--blue); }
+
+/* ---------- blocks ---------- */
+
+.callout {
+  background: var(--surface); border-left: 3px solid var(--blue);
+  border-radius: 0 10px 10px 0; padding: 16px 18px; margin: 20px 0;
+}
+.callout p:last-child { margin-bottom: 0; }
+
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); margin-top: 8px; }
+.card {
+  background: var(--white); border: 1px solid var(--line);
+  border-radius: 10px; padding: 18px;
+}
+.card h4 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: var(--navy); }
+.card p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+
+.price {
+  background: var(--navy); color: var(--white);
+  border-radius: 12px; padding: 26px 28px; margin-top: 20px;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 20px;
+}
+.price .label { font-size: 13px; color: rgba(255, 255, 255, 0.72); }
+.price .value {
+  font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em; white-space: nowrap;
+}
+
+ol.phases { counter-reset: p; list-style: none; margin: 0; padding: 0; }
+ol.phases li {
+  counter-increment: p; position: relative;
+  padding: 0 0 20px 42px; border-left: 1px solid var(--line); margin-left: 12px;
+}
+ol.phases li::before {
+  content: counter(p);
+  position: absolute; left: -13px; top: 0;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--blue); color: var(--white);
+  font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+ol.phases li:last-child { border-left-color: transparent; padding-bottom: 0; }
+ol.phases b { display: block; color: var(--navy); }
+
+/* ---------- footer ---------- */
+
+.footer {
+  margin-top: 56px; padding-top: 22px; border-top: 2px solid var(--navy);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+  font-size: 13px; color: var(--ink-soft);
+}
+.footer b { display: block; color: var(--navy); }
+
+/* ---------- print ---------- */
+
+@page { size: A4; margin: 16mm 14mm; }
+
+@media print {
+  body { background: var(--white); font-size: 11pt; }
+  .doc { max-width: none; padding: 0; }
+  /* Without this, every tinted row and the navy price block print white. */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  section { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  tr, .card, .callout, .price { break-inside: avoid; }
+  .page-break { break-after: page; }
+}
+
+@media (max-width: 620px) {
+  .doc { padding: 24px 18px 40px; }
+  .cover h1 { font-size: 32px; }
+  .grid { grid-template-columns: 1fr; }
+  .price { flex-direction: column; gap: 8px; }
+}
+</style>
+
+<div class="doc">
+
+  <header class="cover">
+    <img src="@@LOGO:ithink-horizontal-color@@" alt="ITHINK">
+    <div class="kind">Коммерческое предложение</div>
+    <h1>Название решения</h1>
+    <div class="client">Для: НАЗВАНИЕ КЛИЕНТА</div>
+    <div class="meta">
+      <div><b>Дата</b>1 января 2026</div>
+      <div><b>Действительно до</b>1 февраля 2026</div>
+      <div><b>Подготовил</b>ITHINK</div>
+    </div>
+  </header>
+
+  <section>
+    <div class="eyebrow">Задача</div>
+    <h2>Что происходит сейчас</h2>
+    <p class="lead">
+      Две–четыре фразы словами клиента, из брифинга. Не про ITHINK — про то,
+      что у них не работает и сколько это стоит.
+    </p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Решение</div>
+    <h2>Что входит в работу</h2>
+    <table>
+      <thead>
+        <tr><th>Модуль</th><th>Что делает</th><th class="num">Стоимость</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Модуль</td><td>Что он закрывает у клиента</td><td class="num">00 000 000</td></tr>
+        <tr class="pick"><td>Рекомендуем</td><td>Одна строка может быть выделена</td><td class="num">00 000 000</td></tr>
+        <tr class="total"><td colspan="2">Итого</td><td class="num">00 000 000 сўм</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <p><b>Не входит в объём:</b> перечислить явно. Это предотвращает спор на втором месяце.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Сроки</div>
+    <h2>Этапы</h2>
+    <ol class="phases">
+      <li><b>Этап — 2 недели</b>Что получает клиент в конце этапа</li>
+      <li><b>Этап — 3 недели</b>Что получает клиент в конце этапа</li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="price">
+      <div>
+        <div class="label">Итого по проекту</div>
+        <div>Оплата по этапам</div>
+      </div>
+      <div class="value">00 000 000 сўм</div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div><b>ITHINK</b>Think beyond limits</div>
+    <div><b>Телефон</b>+998 __ ___ __ __</div>
+    <div><b>Telegram</b>@______</div>
+    <div><b>Почта</b>______@______</div>
+  </footer>
+
+</div>

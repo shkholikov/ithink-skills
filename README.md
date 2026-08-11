@@ -8,6 +8,7 @@ to drop into `~/.claude/skills/` or upload to claude.ai.
 | Skill | What it does |
 |---|---|
 | [**topology-creator**](topology-creator) | Turns a described network into an editable **draw.io** diagram — Cisco icons, zone boxes, interface labels on both ends of every link, colour-coded VLANs, obstacle-avoiding link routing, and a generated legend page. |
+| [**ithink-documents**](ithink-documents) | Writes client-facing ITHINK documents — commercial offers, presentations, technical proposals, one-pagers — on the fixed brand system, then inlines Inter and the logos so the result publishes as an artifact and prints to A4 PDF. |
 
 ![topology-creator output](topology-creator/examples/small-office.png)
 
@@ -18,6 +19,7 @@ to drop into `~/.claude/skills/` or upload to claude.ai.
 ```bash
 git clone https://github.com/shkholikov/ithink-skills
 cp -R ithink-skills/topology-creator ~/.claude/skills/
+cp -R ithink-skills/ithink-documents ~/.claude/skills/
 ```
 
 Restart Claude Code. Each skill folder is self-contained — copy only the ones you
