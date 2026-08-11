@@ -83,25 +83,31 @@ subset.
 Files live in `assets/logos/`, referenced from a document as
 `@@LOGO:<filename-without-extension>@@`.
 
-| File | When to use |
-|---|---|
-| `ithink-horizontal-color` | Default. Cover and document header, on light backgrounds |
-| `ithink-horizontal-white` | On `--navy` and photography |
-| `ithink-horizontal-mono` | Single-colour printing, faxable documents, stamps |
-| `ithink-mark-color` | Favicon, avatar, tight corners, page-footer repeat |
-| `ithink-mark-white` | The same on dark |
-| `ithink-stacked` | Square or narrow placements, title slides |
+Every lockup comes in a colour version for light backgrounds and a white
+version for dark ones. The default carries the tagline; the `plain` pair drops
+it for placements too small to read it.
 
-**Only `ithink-horizontal-color` is present so far** (recovered from the ASLZAR
-proposal, 1939×542, ratio 3.58). The other five names are reserved. If a
-document calls for one that is missing, use the horizontal colour version and
-say so, rather than distorting or recolouring an existing file.
+| File | Size | When to use |
+|---|---|---|
+| `ithink-horizontal-color` | 1939×542 | **Default.** Cover and document header, on light backgrounds |
+| `ithink-horizontal-white` | 1939×542 | The same on `--navy`, dark surfaces and photography |
+| `ithink-horizontal-plain-color` | 1371×443 | No tagline. Running footers and any placement under 200px wide |
+| `ithink-horizontal-plain-white` | 1371×443 | The same on dark |
+| `ithink-stacked-color` | 819×900 | Square or narrow placements, title slides |
+| `ithink-stacked-white` | 819×900 | The same on dark |
+| `ithink-mark-color` | 900×900 | Favicon, avatar, tight corners. Reads on light and dark alike |
+
+There is no white mark and no single-colour mono lockup. The mark is a blue
+diamond holding a white brain, so it already survives both backgrounds and
+needs no negative version. Mono is genuinely absent — if a document needs
+single-colour print, ask for the file rather than flattening a colour logo.
 
 ### Rules
 
 - Clear space on all sides: at least the height of the diamond mark.
-- Minimum width 120px on screen, 32mm in print — below that the tagline inside
-  the lockup stops being legible.
+- Below 200px wide, switch to a `plain` variant. The tagline inside the default
+  lockup stops being legible before the logo itself does.
+- Minimum width 120px on screen, 32mm in print.
 - Never recolour, rotate, add effects to, or place the colour logo on a
   mid-tone background.
 - One logo per page. On a multi-page document it belongs on the cover and in

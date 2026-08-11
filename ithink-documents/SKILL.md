@@ -117,8 +117,6 @@ script exits with a message instead. Everything else — writing, building and
 publishing the artifact — works unchanged there; take the PDF from the browser's
 own print dialog (A4, backgrounds on) when Chrome is unreachable.
 
-Only `ithink-horizontal-color` is present in `assets/logos/`. The five other
-variants named in `references/brand.md` are reserved but not yet supplied. When
-a document needs a missing variant, use the horizontal colour logo and tell the
-user which file is missing — never recolour, rotate or distort an existing one
-to stand in.
+`assets/logos/` covers every placement except single-colour mono print. If a
+document needs a mono lockup, ask for the file — never flatten, recolour,
+rotate or distort an existing logo to stand in.
