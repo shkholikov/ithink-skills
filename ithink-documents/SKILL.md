@@ -32,10 +32,14 @@ Uzbek uses `ʻ` (U+02BB) in *oʻ* and *gʻ*, not a straight apostrophe.
 
 ### 2. Gather what only the user knows
 
+ITHINK's own details — legal name, phone, email, website, and which payment
+requisites are still missing — are in `references/company.md`. Read it instead
+of asking the user for them again.
+
 Never invent client-specific facts. Before writing, establish: client name,
-the problem in their words, scope, prices, timeline, and contact details for
-the footer. Ask for whatever is missing rather than filling it with plausible
-text — a placeholder that survives into a sent document is worse than a gap.
+the problem in their words, scope, prices and timeline. Ask for whatever is
+missing rather than filling it with plausible text — a placeholder that
+survives into a sent document is worse than a gap.
 
 Numbers must be defensible on the spot. Any figure that cannot be sourced gets
 cut, not softened.
@@ -103,6 +107,7 @@ page break and that the price block is intact.
 | Path | What it is |
 |---|---|
 | `references/brand.md` | Palette and colour roles, type scale, logo usage, voice. Read before writing |
+| `references/company.md` | ITHINK's own legal name, contacts and payment requisites. Read before any document footer or invoice |
 | `references/document-patterns.md` | Section structure for each of the four document types |
 | `assets/template.html` | Working base document with every component |
 | `assets/fonts/` | Inter variable font, three subsets, 152 KB total |
