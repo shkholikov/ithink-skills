@@ -54,9 +54,12 @@ Full schema in `references/spec-schema.md`, worked example in
 ```
 
 `flow` is the column and must connect flow nodes. `links` is everything else —
-sidecar tethers and feedback loops. A feedback edge needs `"route": "gutter"`
-so it runs up the left channel instead of across the diagram; give each one its
-own `lane` (0, 1, 2…) or two loops will overlap.
+sidecar tethers and feedback loops. A feedback edge takes `"route": "gutter"`
+so it runs up the left channel instead of across the diagram.
+
+Lanes are assigned automatically: two edges whose vertical spans overlap are
+given separate tracks, so they cannot share a column. Set `lane` by hand only
+to override that.
 
 ### 3. Build
 
@@ -88,7 +91,22 @@ caused it. An unknown icon, a dangling edge or a backwards zone stops the
 build — none of them degrade into a diagram that is quietly wrong about a
 system.
 
-### 4. Look at it before showing it
+### 4. Read the collision report
+
+The build prints what it had to move and what it could not:
+
+```
+diagram.svg  102 KB  932x1506
+  resolved 4 collisions (4 edge/edge)
+  warning: label 'feedback signals' overlaps edge tools->llm; no free slot
+```
+
+`resolved` is routine — it means the rules worked. A **warning is not**: it
+names two things drawn on top of each other, and the fix is in the spec, not
+in the renderer. Usually it means the diagram is asking for more links than the
+layout has room for; cut one, or move a sidecar to a different anchor.
+
+### 5. Look at it before showing it
 
 Render it and actually look:
 
@@ -102,10 +120,26 @@ Text width is approximated rather than measured — there is no font metrics
 library in the stdlib — so a long label can wrap a word early or a tight one
 can sit closer than intended. The failure mode is cosmetic and always visible.
 
-### 5. Publish
+### 6. Publish
 
 Publish the SVG with the Artifact tool, or embed it in a page. For the animated
 version, the `.anim.svg` loops on its own with no script.
+
+## Layout rules
+
+Three rules the renderer enforces, rather than hoping the spec happens to
+avoid trouble:
+
+1. **A line never passes through a box.** Boxes claim their rectangles first;
+   links are then routed as orthogonal paths through the free channels — up the
+   left gutter, or down the corridor between the column and the sidecars.
+2. **Two lines never share a track.** Overlapping vertical spans get separate
+   lanes. Where lines must cross they do so at a right angle, which reads.
+3. **Nothing is drawn over anything.** Every label searches a list of candidate
+   positions and takes the first that touches no box, no line — including its
+   own — and no other label. If none is free, it is placed and reported.
+
+Longest links route first, since they have the fewest options.
 
 ## Icons
 
@@ -145,6 +179,7 @@ than forcing it.
 | `examples/harness.json` | Worked example — the diagram in the README |
 | `scripts/build_diagram.py` | Validate, lay out, render, animate, encode |
 | `scripts/layout.py` | Geometry and text metrics |
+| `scripts/collide.py` | Overlap detection, lane assignment, label placement |
 | `scripts/render.py` | SVG drawing, the motion model and the reveal order |
 | `scripts/gifenc.py` | PNG reader, colour quantiser, frame differencing, GIF89a encoder |
-| `tests/` | `python3 tests/test_system_diagram.py` — 37 tests, no dependencies |
+| `tests/` | `python3 tests/test_system_diagram.py` — 46 tests, no dependencies |

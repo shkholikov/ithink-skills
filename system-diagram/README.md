@@ -60,8 +60,13 @@ putting them in the column is what turns an explanatory diagram into a
 confusing one.
 
 A feedback edge takes `"route": "gutter"` and runs up the left channel rather
-than across the middle. Give each one its own `lane` so two loops do not share
-a track.
+than across the middle; lanes are assigned automatically so two loops never
+share a track.
+
+Overlap is enforced, not hoped for. Boxes claim their space first, links route
+as orthogonal paths through the free channels, and every label takes the first
+candidate position that touches no box, no line and no other label. Whatever
+had to be moved is printed; whatever could not be is named as a warning.
 
 Layout is deliberately one vertical column. A general graph layout engine
 produces diagrams nobody can follow; a column reads top to bottom the way the
@@ -89,9 +94,10 @@ and it is always visible.
 python3 tests/test_system_diagram.py
 ```
 
-37 tests, no dependencies. They cover spec validation, geometry (nothing
+46 tests, no dependencies. They cover spec validation, geometry (nothing
 overlaps, the zone encloses its nodes, sidecars stack), SVG well-formedness and
-escaping, frame differencing, and a full LZW round-trip through an independent decoder —
+escaping, collision rules (no edge through a node in the shipped example),
+frame differencing, and a full LZW round-trip through an independent decoder —
 including inputs long enough to force a code-width increase and a dictionary
 reset, which is where the encoder was wrong the first time.
 

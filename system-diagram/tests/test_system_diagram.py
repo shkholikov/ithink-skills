@@ -16,6 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 
 import build_diagram as B   # noqa: E402
+import collide as C         # noqa: E402
 import gifenc               # noqa: E402
 import layout as L          # noqa: E402
 import render as R          # noqa: E402
@@ -174,6 +175,68 @@ class Svg(unittest.TestCase):
         svg = self.build(json.loads((ROOT / 'examples/harness.json').read_text())).svg()
         self.assertNotIn('http://', svg.replace('http://www.w3.org', ''))
         self.assertNotIn('https://', svg)
+
+
+class Collision(unittest.TestCase):
+    """Rules: lines miss boxes, lines miss lines, nothing sits on anything."""
+
+    def test_segment_through_box_is_detected(self):
+        box = (10, 10, 20, 20)
+        self.assertTrue(C.seg_hits_rect((0, 20), (40, 20), box))
+        self.assertFalse(C.seg_hits_rect((0, 60), (40, 60), box))
+
+    def test_segment_touching_the_pad_counts(self):
+        box = (10, 10, 20, 20)
+        self.assertTrue(C.seg_hits_rect((0, 8), (40, 8), box, pad=4))
+        self.assertFalse(C.seg_hits_rect((0, 8), (40, 8), box, pad=0))
+
+    def test_crossing_segments(self):
+        self.assertTrue(C.segs_cross((0, 0), (10, 10), (0, 10), (10, 0)))
+        self.assertFalse(C.segs_cross((0, 0), (10, 0), (0, 5), (10, 5)))
+
+    def test_touching_endpoints_are_not_a_crossing(self):
+        # Edges legitimately meet at a node; that must not be reported.
+        self.assertFalse(C.segs_cross((0, 0), (10, 0), (10, 0), (20, 0)))
+
+    def test_label_moves_to_a_free_slot(self):
+        b = C.Board()
+        b.block((0, 0, 50, 20), 'node')
+        x, y = b.place_label([(25, 10), (25, 60)], 40, 16, 'lbl')
+        self.assertEqual((x, y), (25, 60), 'label should have moved off the node')
+        self.assertEqual(b.resolved['label'], 1)
+
+    def test_label_warns_when_nothing_is_free(self):
+        b = C.Board()
+        b.block((0, 0, 200, 200), 'wall')
+        b.place_label([(50, 50), (60, 60)], 20, 10, 'lbl')
+        self.assertTrue(any('no free slot' in w for w in b.warnings))
+
+    def test_lanes_separate_overlapping_spans(self):
+        b, lanes = C.Board(), {}
+        self.assertEqual(b.pick_lane((0, 100), lanes, 'a'), 0)
+        self.assertEqual(b.pick_lane((50, 150), lanes, 'b'), 1, 'overlapping spans need lanes')
+        self.assertEqual(b.pick_lane((400, 500), lanes, 'c'), 0, 'disjoint spans may share')
+
+    def test_example_diagram_has_no_unresolved_overlap(self):
+        s = B.validate(json.loads((ROOT / 'examples/harness.json').read_text()))
+        r = R.Renderer(s, L.Layout(s), embed_font=False)
+        r.svg()
+        self.assertEqual(r.board.warnings, [], 'the shipped example must be clean')
+
+    def test_no_edge_passes_through_a_node(self):
+        s = B.validate(json.loads((ROOT / 'examples/harness.json').read_text()))
+        lay = L.Layout(s)
+        r = R.Renderer(s, lay, embed_font=False)
+        r.svg()
+        node_ids = {n['id'] for n in s['nodes']}
+        for segs, name in r.board.paths:
+            ends = set(name.split('->'))
+            for p, q in segs:
+                for nid in node_ids - ends:
+                    box = lay.boxes[nid]
+                    self.assertFalse(
+                        C.seg_hits_rect(p, q, (box['x'], box['y'], box['w'], box['h']), pad=0),
+                        f'edge {name} crosses node {nid}')
 
 
 class Lzw(unittest.TestCase):

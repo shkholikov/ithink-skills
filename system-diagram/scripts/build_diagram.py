@@ -197,6 +197,11 @@ def main():
     out.write_text(rend.svg(), encoding='utf-8')
     print(f'{out}  {out.stat().st_size / 1024:.0f} KB  {lay.width:.0f}x{lay.height:.0f}')
 
+    # Say what had to be moved, and name anything that could not be.
+    report = rend.board.report()
+    if report:
+        print(report, file=sys.stderr)
+
     if args.animate:
         anim = out.with_name(f'{out.stem}.anim.svg')
         anim.write_text(rend.svg(animate=True, reveal=args.reveal), encoding='utf-8')

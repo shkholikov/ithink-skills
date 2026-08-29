@@ -94,16 +94,17 @@ Everything not in the column.
 | `label` | — | |
 | `arrow` | `true` | `false` for a tether that is not directional |
 | `route` | — | `"gutter"` routes it up the left channel |
-| `lane` | `0` | Which gutter channel. Give each feedback loop its own |
+| `lane` | auto | Which gutter channel. Assigned automatically; set it only to override |
 
 Without `route`, a link is a short curve between the two boxes — right for a
 sidecar tether. With `"route": "gutter"` it leaves the source on its left, runs
 up the left channel and comes back into the target, which is the only way a
 long feedback loop avoids crossing the column.
 
-Two gutter links on the same `lane` will overlap. This is not validated,
-because a diagram can legitimately want two edges sharing a channel; look at
-the render.
+Lanes are chosen automatically: an edge takes the lowest-numbered track whose
+existing spans do not overlap its own, so two feedback loops can never run down
+the same column over the same rows. Setting `lane` by hand overrides that and
+is the one way to reintroduce an overlap.
 
 ## Failure messages
 

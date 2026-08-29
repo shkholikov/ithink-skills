@@ -12,6 +12,7 @@ import math
 import pathlib
 from xml.sax.saxutils import escape, quoteattr
 
+import collide as C
 import layout as L
 
 ASSETS = pathlib.Path(__file__).resolve().parent.parent / 'assets'
@@ -134,6 +135,17 @@ class Renderer:
     def _build(self):
         spec, lay = self.spec, self.lay
         order = {}
+        self.board = C.Board()
+        self.lanes = {}
+
+        # Phase 1 — everything solid claims its rectangle, so no line routed
+        # later can be planned through a box that simply had not been drawn yet.
+        for nid, b in lay.boxes.items():
+            self.board.block((b['x'], b['y'], b['w'], b['h']), nid)
+        if lay.zone:
+            z = lay.zone
+            lw = text_w(z['label'], 12, True) + 34
+            self.board.block((z['x'] + 22, z['y'] - 17, lw, 34), 'zone-tab')
 
         if spec.get('title'):
             self.add(0, self._header())
@@ -149,10 +161,15 @@ class Renderer:
             order[car['id']] = o
             self.add(o, self._sidecar(car))
 
-        for e in spec.get('flow', []):
+        # Phase 2 — lines, longest first. A long edge has the fewest viable
+        # routes, so it should choose before short ones fill the free space.
+        flow = list(spec.get('flow', []))
+        for e in flow:
             self.add(max(order[e['from']], order[e['to']]), self._flow_edge(e))
 
-        for e in spec.get('links', []):
+        links = sorted(spec.get('links', []),
+                       key=lambda e: -abs(lay.boxes[e['from']]['cy'] - lay.boxes[e['to']]['cy']))
+        for e in links:
             self.add(max(order[e['from']], order[e['to']]), self._link_edge(e, order))
 
     # -- pieces ------------------------------------------------------------
@@ -288,50 +305,58 @@ class Renderer:
 
     # -- edges -------------------------------------------------------------
 
-    def _label(self, x, y, text, color=INK_SOFT, anchor='start'):
-        w = text_w(text, 12) + 10
-        rx = x - 5 if anchor == 'start' else x - w / 2
-        return (f'<rect x="{rx:.1f}" y="{y - 10:.1f}" width="{w:.1f}" height="16" rx="4" fill="#f7faff"/>'
-                f'<text x="{x:.1f}" y="{y + 2:.1f}" text-anchor="{anchor}" font-size="12" '
+    def _label(self, candidates, text, name, color=INK_SOFT, ignore=()):
+        """Place a label at the first candidate that collides with nothing."""
+        w, h = text_w(text, 12) + 12, 17
+        cx, cy = self.board.place_label(candidates, w, h, name, ignore)
+        return (f'<rect x="{cx - w / 2:.1f}" y="{cy - h / 2:.1f}" width="{w:.1f}" '
+                f'height="{h:.1f}" rx="4" fill="#f7faff"/>'
+                f'<text x="{cx:.1f}" y="{cy + 4:.1f}" text-anchor="middle" font-size="12" '
                 f'fill="{color}">{esc(text)}</text>')
 
     def _flow_edge(self, e):
         x1, y1 = self.lay.bottom(e['from'])
         x2, y2 = self.lay.top(e['to'])
         color = e.get('color', NAVY)
+        name = f"{e['from']}->{e['to']}"
+        pts = [(x1, y1), (x2, y2 - 9)]
+        self.board.path(pts, name)
         parts = [f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2 - 9:.1f}" '
                  f'stroke="{color}" stroke-width="2" marker-end="url(#arrow)"/>']
         if e.get('label'):
-            parts.append(self._label(x1 + 12, (y1 + y2) / 2, e['label'], color))
+            mid = (y1 + y2) / 2
+            w = text_w(e['label'], 12) + 12
+            cands = [(x1 + 14 + w / 2, mid), (x1 - 14 - w / 2, mid),
+                     (x1 + 14 + w / 2, mid - 20), (x1 - 14 - w / 2, mid - 20),
+                     (x1 + 14 + w / 2, mid + 20), (x1 - 14 - w / 2, mid + 20)]
+            parts.append(self._label(cands, e['label'], f'{name} label', color))
         return f'<g>{"".join(parts)}</g>'
 
     def _link_edge(self, e, order):
         """Sidecar tethers and feedback loops — everything not in the main column."""
         style = e.get('style', 'dotted')
-        color = {'dotted': 'rgba(26,33,56,0.34)', 'dashed': '#d1603d',
-                 'accent': BLUE, 'green': '#2e7d5b'}.get(e.get('tone', ''), None)
+        color = {'accent': BLUE, 'green': '#2e7d5b'}.get(e.get('tone', ''))
         if color is None:
             color = '#d1603d' if style == 'dashed' else 'rgba(26,33,56,0.34)'
         dash = {'dotted': '2 5', 'dashed': '8 6', 'solid': None}[style]
 
         a, b = self.lay.boxes[e['from']], self.lay.boxes[e['to']]
-        if e.get('route') == 'gutter':
-            # Feedback: leave the source on its left, run up the gutter, come
-            # back into the target. Kept off the column so it never crosses a node.
-            gx = L.MARGIN + 30 + e.get('lane', 0) * 36
-            x1, y1 = a['x'], a['cy']
-            x2, y2 = b['x'], b['cy']
-            d = (f'M {x1:.1f} {y1:.1f} H {gx:.1f} V {y2:.1f} H {x2 - 10:.1f}')
-            lx, ly = gx + 14, y2 - 10
-            anchor = 'start'
-        else:
-            x1, y1 = (a['x'], a['cy']) if a['x'] > b['x'] else (a['x'] + a['w'], a['cy'])
-            x2, y2 = (b['x'] + b['w'], b['cy']) if a['x'] > b['x'] else (b['x'], b['cy'])
-            mx = (x1 + x2) / 2
-            d = f'M {x1:.1f} {y1:.1f} C {mx:.1f} {y1:.1f} {mx:.1f} {y2:.1f} {x2:.1f} {y2:.1f}'
-            lx, ly = mx, (y1 + y2) / 2 - 6
-            anchor = 'middle'
+        name = f"{e['from']}->{e['to']}"
+        ends = (e['from'], e['to'])
 
+        if e.get('route') == 'gutter' or a['x'] == b['x']:
+            pts, lx, ly = self._gutter_route(a, b, e, name)
+        else:
+            pts, lx, ly = self._corridor_route(a, b, e, name)
+
+        # Whatever the route, say so rather than drawing through something.
+        through = self.board.boxes_hit(pts, ignore=ends)
+        if through:
+            self.board.warnings.append(
+                f'edge {name} passes through {", ".join(through)}')
+        self.board.path(pts, name)
+
+        d = 'M ' + ' L '.join(f'{x:.1f} {y:.1f}' for x, y in pts)
         marker = ' marker-end="url(#arrow-soft)"' if e.get('arrow', True) else ''
         da = f' stroke-dasharray="{dash}"' if dash else ''
         cls = ''
@@ -340,10 +365,43 @@ class Renderer:
         elif dash and self.mode == 'bake':
             da += f' stroke-dashoffset="{-self.t * DASH_PERIOD:.2f}"'
         parts = [f'<path d="{d}" fill="none" stroke="{color}" stroke-width="1.8"'
-                 f'{da}{cls}{marker}/>']
+                 f'{da}{cls}{marker} stroke-linejoin="round"/>']
+
         if e.get('label'):
-            parts.append(self._label(lx, ly, e['label'], color, anchor))
+            w = text_w(e['label'], 12) + 12
+            cands = [(lx + w / 2, ly), (lx + w / 2, ly - 18), (lx + w / 2, ly + 18),
+                     (lx + w / 2, ly - 36), (lx + w / 2, ly + 36),
+                     (lx - w / 2 - 12, ly), (lx + w / 2, ly - 54)]
+            parts.append(self._label(cands, e['label'], f'{name} label', color, ignore=ends))
         return f'<g>{"".join(parts)}</g>'
+
+    def _gutter_route(self, a, b, e, name):
+        """Out the left, up a private lane, back in. Never crosses the column."""
+        span = (a['cy'], b['cy'])
+        lane = e['lane'] if 'lane' in e else self.board.pick_lane(span, self.lanes, name)
+        gx = L.MARGIN + 30 + lane * 34
+        pts = [(a['x'], a['cy']), (gx, a['cy']), (gx, b['cy']), (b['x'] - 10, b['cy'])]
+        return pts, gx + 10, b['cy'] - 12
+
+    def _corridor_route(self, a, b, e, name):
+        """
+        A sidecar tether runs in the channel between the column and the cards,
+        as three orthogonal segments. The old curve swept diagonally across the
+        diagram and cut through whatever happened to be in the way.
+        """
+        if a['x'] > b['x']:
+            a, b = b, a                      # a is the left-hand box
+            flip = True
+        else:
+            flip = False
+        x1, x2 = a['x'] + a['w'], b['x']
+        mid = (x1 + x2) / 2
+        lane = self.board.pick_lane((a['cy'], b['cy']), self.lanes.setdefault('corridor', {}), name)
+        cx = mid + (lane - 0) * 14
+        pts = [(x1, a['cy']), (cx, a['cy']), (cx, b['cy']), (x2, b['cy'])]
+        if flip:
+            pts.reverse()
+        return pts, cx + 8, (a['cy'] + b['cy']) / 2 - 10
 
     # -- output ------------------------------------------------------------
 
