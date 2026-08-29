@@ -1,0 +1,66 @@
+{
+  "title": "What is Harness Engineering?",
+  "highlight": "Harness Engineering",
+  "subtitle": "The reliability layer around the LLM",
+  "brand": "ITHINK",
+
+  "nodes": [
+    {"id": "goal", "label": "User Goal", "shape": "pill", "tone": "neutral", "icon": "target"},
+
+    {"id": "ctx", "label": "Context Builder", "sub": "live facts + state", "step": 1, "tone": "blue",
+     "tiles": [
+       {"icon": "file-text", "label": "Docs"},
+       {"icon": "database", "label": "Data"},
+       {"icon": "history", "label": "History"}
+     ]},
+
+    {"id": "llm", "label": "LLM", "sub": "reasoning", "step": 2,
+     "shape": "ellipse", "tone": "violet", "icon": "brain"},
+
+    {"id": "gate", "label": "Policy Gate", "sub": "allow / block", "step": 3,
+     "shape": "diamond", "tone": "amber", "icon": "lock"},
+
+    {"id": "tools", "label": "Tools / Runtime", "sub": "guarded execution", "step": 4, "tone": "rust",
+     "tiles": [
+       {"icon": "users", "label": "CRM"},
+       {"icon": "cloud", "label": "APIs"},
+       {"icon": "network", "label": "MCP"}
+     ]},
+
+    {"id": "verify", "label": "Verify", "sub": "tests + validation", "step": 5,
+     "tone": "rust", "icon": "file-check"},
+
+    {"id": "result", "label": "Accepted Result", "sub": "bounded + checked", "step": 6,
+     "tone": "green", "icon": "bot"}
+  ],
+
+  "zone": {"label": "THE HARNESS", "from": "ctx", "to": "verify"},
+
+  "sidecars": [
+    {"id": "obs", "anchor": "llm", "label": "Observability", "sub": "traces + metrics + errors",
+     "icon": "activity", "tone": "slate", "note": "watches every stage"},
+    {"id": "cons", "anchor": "tools", "label": "Constraints", "sub": "rules + permissions",
+     "icon": "list-checks", "tone": "amber"}
+  ],
+
+  "flow": [
+    {"from": "goal", "to": "ctx", "label": "intent"},
+    {"from": "ctx", "to": "llm", "label": "grounded input"},
+    {"from": "llm", "to": "gate", "label": "proposed action"},
+    {"from": "gate", "to": "tools", "label": "approved"},
+    {"from": "tools", "to": "verify", "label": "result"},
+    {"from": "verify", "to": "result", "label": "accepted", "color": "#2e7d5b"}
+  ],
+
+  "links": [
+    {"from": "obs", "to": "ctx", "style": "dotted", "arrow": false},
+    {"from": "obs", "to": "gate", "style": "dotted", "arrow": false},
+    {"from": "obs", "to": "verify", "style": "dotted", "arrow": false},
+    {"from": "cons", "to": "gate", "style": "dashed", "label": "enforce"},
+    {"from": "cons", "to": "tools", "style": "dashed", "label": "limit"},
+    {"from": "tools", "to": "llm", "style": "solid", "label": "tool result",
+     "route": "gutter", "lane": 1, "tone": "accent"},
+    {"from": "verify", "to": "ctx", "style": "dashed", "label": "feedback signals",
+     "route": "gutter", "lane": 0}
+  ]
+}
