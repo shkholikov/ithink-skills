@@ -35,6 +35,7 @@ The column, drawn top to bottom in the order given.
 | `tone` | enum | `neutral` | See `palette.md` |
 | `icon` | string | — | Drawn left of the label. Ignored when `tiles` is set |
 | `tiles` | list | — | `{"icon", "label"}` pairs in a strip along the bottom |
+| `motion` | enum | per element | `swing`, `bob`, `pulse`, `none` — how the icon moves in the animated output |
 
 `shape` carries meaning worth keeping consistent: `pill` for something entering
 or leaving the system, `ellipse` for a model or black box, `diamond` for a
@@ -66,6 +67,7 @@ than sit in it.
 | `icon` | string | Centred under the text |
 | `note` | string | Small line at the bottom, e.g. "watches every stage" |
 | `tone` | enum | Default `slate` |
+| `motion` | enum | Default `pulse` |
 
 Two sidecars anchored to the same node stack downwards instead of overlapping.
 
@@ -116,3 +118,22 @@ the render.
 | `sidecar obs anchors to 'nope', which is not a flow node` | Bad anchor |
 | `zone "from" must come before "to" in the node order` | Reversed zone |
 | `unknown icon 'unicorn' on node llm` | Typo, with a pointer to `icons.md` |
+
+## Motion
+
+Only the animated outputs use it; the static SVG is always still.
+
+| Motion | What it does | Default for |
+|---|---|---|
+| `swing` | Pendulum about the icon's top edge, ±7° | Node icons |
+| `bob` | Rises and falls 3.5px | Tile icons |
+| `pulse` | Breathes between 0.945 and 1.055 | Sidecar icons |
+| `none` | Holds still | — |
+
+Every element runs on the same 2.4s loop with a per-element phase offset, so
+the diagram never pulses in unison and returns to its opening pose exactly once
+per cycle. Dashed links flow along their path on the same clock.
+
+The animated SVG honours `prefers-reduced-motion` and stops entirely. The GIF
+cannot — that is a property of the format, and a reason to send the SVG when
+you know the audience.

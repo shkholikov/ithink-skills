@@ -8,6 +8,7 @@ static diagram rather than a near-miss redrawn by a second code path.
 """
 
 import json
+import math
 import pathlib
 from xml.sax.saxutils import escape, quoteattr
 
@@ -34,6 +35,33 @@ INK_FAINT = 'rgba(30,32,34,0.44)'
 
 _ICONS = json.loads((ASSETS / 'icons.json').read_text(encoding='utf-8'))
 
+# One loop length for everything, so the whole diagram returns to its starting
+# pose together and the GIF cycles seamlessly.
+CYCLE = 2.4
+DASH_PERIOD = 28          # two dash+gap pairs of the 8/6 pattern
+
+# Icons move a little, forever. Nothing appears or disappears — the diagram is
+# whole from the first frame, and the motion is there to make it feel alive
+# rather than to explain the order of anything.
+MOTIONS = {
+    'swing': {'kind': 'rot', 'amp': 7.0},     # pendulum about the top edge
+    'bob':   {'kind': 'y',   'amp': 3.5},
+    'pulse': {'kind': 'sc',  'amp': 0.055},
+    'none':  None,
+}
+DEFAULT_MOTION = {'node': 'swing', 'tile': 'bob', 'sidecar': 'pulse'}
+
+
+def motion_transform(kind, amp, phase, t, px, py):
+    """The pose of one element at loop position t, baked as an SVG transform."""
+    v = math.sin(2 * math.pi * (t + phase))
+    if kind == 'rot':
+        return f'rotate({amp * v:.3f} {px:.1f} {py:.1f})'
+    if kind == 'y':
+        return f'translate(0 {amp * v:.3f})'
+    k = 1 + amp * v
+    return f'translate({px * (1 - k):.3f} {py * (1 - k):.3f}) scale({k:.4f})'
+
 
 # -- text ---------------------------------------------------------------
 
@@ -47,14 +75,26 @@ def esc(s):
 
 # -- primitives ------------------------------------------------------------
 
-def icon(name, x, y, size, color, width=2.0):
+def icon(name, x, y, size, color, width=2.0, motion=None, phase=0.0, mode='static', t=0.0):
     if name not in _ICONS:
         available = ', '.join(sorted(_ICONS)[:8])
         raise KeyError(f'unknown icon {name!r}. {len(_ICONS)} available, e.g. {available}')
     s = size / 24.0
-    return (f'<g transform="translate({x:.1f},{y:.1f}) scale({s:.4f})" '
+    core = (f'<g transform="translate({x:.1f},{y:.1f}) scale({s:.4f})" '
             f'fill="none" stroke="{color}" stroke-width="{width / s:.2f}" '
             f'stroke-linecap="round" stroke-linejoin="round">{_ICONS[name]}</g>')
+
+    spec = MOTIONS.get(motion or 'none')
+    if spec is None or mode == 'static':
+        return core
+
+    # Pivot at the top centre: a badge swings from where it hangs.
+    px, py = x + size / 2, y
+    if mode == 'bake':
+        tr = motion_transform(spec['kind'], spec['amp'], phase, t, px, py)
+        return f'<g transform="{tr}">{core}</g>'
+    return (f'<g class="m-{motion}" style="transform-origin:{px:.1f}px {py:.1f}px;'
+            f'animation-delay:{-phase * CYCLE:.3f}s">{core}</g>')
 
 
 def tspans(lines, x, y, size, weight, fill, lh=1.28, anchor='middle'):
@@ -70,9 +110,20 @@ class Renderer:
         self.spec = spec
         self.lay = lay
         self.embed_font = embed_font
-        self.items = []      # (order, svg)
+        self.mode = 'static'   # static | css | bake
+        self.t = 0.0
+        self.items = []        # (order, svg)
         self.max_order = 0
         self._build()
+
+    def _rebuild(self, mode, t):
+        self.mode, self.t = mode, t
+        self.items, self.max_order = [], 0
+        self._build()
+
+    def _phase(self, key):
+        """Stable per-element offset so icons are not all in step."""
+        return (hash(key) % 997) / 997.0
 
     def add(self, order, svg):
         self.items.append((order, svg))
@@ -178,7 +229,10 @@ class Renderer:
             iw = 30
             total = iw + 12 + text_w(node['label'], 19, True)
             ix = b['cx'] - total / 2
-            parts.append(icon(node['icon'], ix, head_cy - 15 - (7 if node.get('sub') else 0), iw, tone['line'], 2.1))
+            parts.append(icon(node['icon'], ix, head_cy - 15 - (7 if node.get('sub') else 0),
+                              iw, tone['line'], 2.1,
+                              motion=node.get('motion', DEFAULT_MOTION['node']),
+                              phase=self._phase(node['id']), mode=self.mode, t=self.t))
             label_cx = ix + iw + 12 + text_w(node['label'], 19, True) / 2
 
         ly = head_cy + (0 if not node.get('sub') else -4)
@@ -193,10 +247,10 @@ class Renderer:
                          f'font-weight="700" fill="#ffffff">{node["step"]}</text>')
 
         if node.get('tiles'):
-            parts.append(self._tiles(node['tiles'], b, tone))
+            parts.append(self._tiles(node['tiles'], b, tone, node['id']))
         return f'<g>{"".join(parts)}</g>'
 
-    def _tiles(self, tiles, b, tone):
+    def _tiles(self, tiles, b, tone, key=''):
         n = len(tiles)
         span = b['w'] - 48
         step = span / n
@@ -204,7 +258,9 @@ class Renderer:
         out = []
         for i, t in enumerate(tiles):
             cx = b['x'] + 24 + step * (i + 0.5)
-            out.append(icon(t['icon'], cx - 17, y, 34, tone['line'], 1.9))
+            out.append(icon(t['icon'], cx - 17, y, 34, tone['line'], 1.9,
+                            motion=t.get('motion', DEFAULT_MOTION['tile']),
+                            phase=self._phase(f'{key}:{i}'), mode=self.mode, t=self.t))
             out.append(tspans([t['label']], cx, y + 54, 12, 600, tone['ink']))
         return ''.join(out)
 
@@ -221,7 +277,9 @@ class Renderer:
             parts.append(tspans(lines, b['cx'], cy + 12, 12, 400, INK_SOFT))
             cy += len(lines) * 16
         if car.get('icon'):
-            parts.append(icon(car['icon'], b['cx'] - 16, cy + 6, 32, tone['line'], 2.0))
+            parts.append(icon(car['icon'], b['cx'] - 16, cy + 6, 32, tone['line'], 2.0,
+                              motion=car.get('motion', DEFAULT_MOTION['sidecar']),
+                              phase=self._phase(car['id']), mode=self.mode, t=self.t))
             cy += 44
         if car.get('note'):
             # A translucent tone line is fine for a border and unreadable as text.
@@ -276,8 +334,13 @@ class Renderer:
 
         marker = ' marker-end="url(#arrow-soft)"' if e.get('arrow', True) else ''
         da = f' stroke-dasharray="{dash}"' if dash else ''
+        cls = ''
+        if dash and self.mode == 'css':
+            cls = ' class="m-dash"'
+        elif dash and self.mode == 'bake':
+            da += f' stroke-dashoffset="{-self.t * DASH_PERIOD:.2f}"'
         parts = [f'<path d="{d}" fill="none" stroke="{color}" stroke-width="1.8"'
-                 f'{da}{marker}/>']
+                 f'{da}{cls}{marker}/>']
         if e.get('label'):
             parts.append(self._label(lx, ly, e['label'], color, anchor))
         return f'<g>{"".join(parts)}</g>'
@@ -307,34 +370,58 @@ class Renderer:
             '</style>'
         )
 
-    def svg(self, upto=None, animate=False):
+    def svg(self, upto=None, animate=False, t=None, reveal=False):
+        """
+        upto    : reveal frame — draw only groups up to this order
+        animate : CSS-driven loop, one file, no script
+        t       : bake the motion pose at this loop position (0..1), for GIF frames
+        reveal  : with animate, build the diagram up step by step instead of
+                  holding it whole and letting the icons move
+        """
+        mode = 'css' if animate else ('bake' if t is not None else 'static')
+        self._rebuild(mode, t or 0.0)
+
         items = sorted(self.items, key=lambda kv: kv[0])
         if upto is not None:
-            items = [(o, s) for o, s in items if o <= upto]
+            items = [(o, sv) for o, sv in items if o <= upto]
 
-        body = []
-        anim_css = ''
+        css = ''
+        body = [sv for _, sv in items]
+
         if animate:
-            n = self.max_order
-            hold, step = 1.6, 0.55
-            total = step * (n + 1) + hold
-            keys = []
-            for o in range(n + 1):
-                start = (step * o) / total * 100
-                end = (step * o + 0.35) / total * 100
-                keys.append(f'@keyframes r{o}{{0%,{start:.2f}%{{opacity:0}}'
-                            f'{end:.2f}%,100%{{opacity:1}}}}')
-            anim_css = ('<style>' + ''.join(keys) +
+            css = (
+                '<style>'
+                '@keyframes m-swing{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}'
+                '@keyframes m-bob{0%,100%{transform:translateY(-3.5px)}50%{transform:translateY(3.5px)}}'
+                '@keyframes m-pulse{0%,100%{transform:scale(0.945)}50%{transform:scale(1.055)}}'
+                f'@keyframes m-dash{{to{{stroke-dashoffset:-{DASH_PERIOD}}}}}'
+                '.m-swing,.m-bob,.m-pulse{transform-box:view-box;'
+                f'animation-duration:{CYCLE}s;animation-timing-function:ease-in-out;'
+                'animation-iteration-count:infinite}'
+                '.m-swing{animation-name:m-swing}.m-bob{animation-name:m-bob}'
+                '.m-pulse{animation-name:m-pulse}'
+                f'.m-dash{{animation:m-dash {CYCLE / 2}s linear infinite}}'
+                '@media (prefers-reduced-motion:reduce){'
+                '.m-swing,.m-bob,.m-pulse,.m-dash{animation:none}}'
+                '</style>'
+            )
+            if reveal:
+                n = self.max_order
+                hold, step = 1.6, 0.55
+                total = step * (n + 1) + hold
+                keys = ''.join(
+                    f'@keyframes r{o}{{0%,{(step * o) / total * 100:.2f}%{{opacity:0}}'
+                    f'{(step * o + 0.35) / total * 100:.2f}%,100%{{opacity:1}}}}'
+                    for o in range(n + 1))
+                css += ('<style>' + keys +
                         ''.join(f'.o{o}{{opacity:0;animation:r{o} {total:.2f}s infinite}}'
                                 for o in range(n + 1)) + '</style>')
-            body = [s.replace('<g>', f'<g class="o{o}">', 1) for o, s in items]
-        else:
-            body = [s for _, s in items]
+                body = [sv.replace('<g>', f'<g class="o{o}">', 1) for o, sv in items]
 
         return (
             f'<svg xmlns="http://www.w3.org/2000/svg" width="{self.lay.width:.0f}" '
             f'height="{self.lay.height:.0f}" viewBox="0 0 {self.lay.width:.0f} {self.lay.height:.0f}">'
-            f'{self._defs()}{anim_css}'
+            f'{self._defs()}{css}'
             f'<rect width="100%" height="100%" fill="#f7faff"/>'
             f'{"".join(body)}</svg>'
         )

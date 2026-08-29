@@ -1,6 +1,6 @@
 ---
 name: system-diagram
-description: Use when the user asks to draw, create, explain or animate a system, architecture, pipeline or flow diagram — how a service works end to end, what an agent loop does, where a request travels, what guards a step. Produces a self-contained SVG in the ITHINK style, a looping animated SVG, and optionally a real GIF that reveals the diagram step by step. Triggers on "architecture diagram", "system design", "flow diagram", "pipeline diagram", "how it works diagram", "схема системы", "архитектура", "diagram this flow", "explainer graphic", or when a user describes stages of a process and asks to picture it. Not for network topology — use topology-creator for devices, ports and VLANs.
+description: Use when the user asks to draw, create, explain or animate a system, architecture, pipeline or flow diagram — how a service works end to end, what an agent loop does, where a request travels, what guards a step. Produces a self-contained SVG in the ITHINK style, a looping animated SVG, and optionally a real GIF in which the icons move on a seamless loop. Triggers on "architecture diagram", "system design", "flow diagram", "pipeline diagram", "how it works diagram", "схема системы", "архитектура", "diagram this flow", "explainer graphic", or when a user describes stages of a process and asks to picture it. Not for network topology — use topology-creator for devices, ports and VLANs.
 ---
 
 # System diagram
@@ -66,6 +66,20 @@ python3 scripts/build_diagram.py spec.json -o diagram.svg --animate  # + looping
 python3 scripts/build_diagram.py spec.json -o diagram.svg --gif      # + real GIF
 ```
 
+Two kinds of motion, and picking the wrong one is the most likely mistake:
+
+- **Default — living diagram.** Everything is visible from the first frame and
+  stays visible; the icons drift, swing and pulse, and dashed links flow along
+  their path. Nothing appears or disappears. This is what an explainer GIF
+  looks like on social media, and it is the one to use unless asked otherwise.
+- **`--reveal`** — the diagram builds up one stage at a time and rests on the
+  finished picture. Use it when the *order* is the point, such as walking
+  through a pipeline in a talk.
+
+`--frames` (default 30) sets the smoothness of the motion loop and `--scale`
+its pixel size; both trade against file size. Each icon can override its motion
+with `"motion": "swing" | "bob" | "pulse" | "none"`.
+
 Stdlib only. Inter and every icon are embedded, so the SVG renders identically
 offline and inside a published artifact under CSP.
 
@@ -108,9 +122,14 @@ and the animated SVG — is pure stdlib and works everywhere. When a GIF is
 wanted and Chrome is unreachable, hand over the animated SVG and say so; never
 claim a GIF that was not produced.
 
-A GIF of a full-size diagram runs 200–400 KB because every frame is stored
-whole. That is fine for chat and Telegram. If it must be smaller, render at a
-smaller `--scale` or cut the number of stages.
+A 30-frame motion GIF of a full-size diagram runs about 300 KB. Frames after
+the first store only the pixels that changed, which is what keeps a smooth loop
+from reaching several megabytes. If it must be smaller still, drop `--frames`
+or render at `--scale 0.6`.
+
+Rendering a GIF takes roughly three seconds per frame, since each one is a
+separate Chrome launch. A 30-frame loop is about 90 seconds — say so before
+starting rather than leaving the user watching a silent terminal.
 
 The layout is one vertical column by design. A diagram that genuinely needs
 parallel branches or a matrix is the wrong shape for this skill — say so rather
@@ -126,6 +145,6 @@ than forcing it.
 | `examples/harness.json` | Worked example — the diagram in the README |
 | `scripts/build_diagram.py` | Validate, lay out, render, animate, encode |
 | `scripts/layout.py` | Geometry and text metrics |
-| `scripts/render.py` | SVG drawing and the reveal order |
-| `scripts/gifenc.py` | PNG reader, colour quantiser, GIF89a encoder |
-| `tests/` | `python3 tests/test_system_diagram.py` — 32 tests, no dependencies |
+| `scripts/render.py` | SVG drawing, the motion model and the reveal order |
+| `scripts/gifenc.py` | PNG reader, colour quantiser, frame differencing, GIF89a encoder |
+| `tests/` | `python3 tests/test_system_diagram.py` — 37 tests, no dependencies |

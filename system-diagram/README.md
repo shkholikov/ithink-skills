@@ -11,9 +11,11 @@ Three outputs from one spec:
 
 - **`diagram.svg`** — self-contained. Inter and all 98 icons are embedded, so it
   renders identically offline and inside a published artifact under CSP.
-- **`diagram.anim.svg`** — the same diagram revealing itself step by step, on a
-  loop. Pure CSS, no script, no dependency.
-- **`diagram.gif`** — a real GIF89a for chat, Telegram and slide decks.
+- **`diagram.anim.svg`** — the same diagram, alive: icons swing, bob and pulse
+  on a shared 2.4s loop and dashed links flow. Pure CSS, no script, and it
+  stops for `prefers-reduced-motion`.
+- **`diagram.gif`** — a real GIF89a of that loop for chat, Telegram and decks.
+  Add `--reveal` instead to build the diagram up one stage at a time.
 
 ## Use
 
@@ -87,11 +89,11 @@ and it is always visible.
 python3 tests/test_system_diagram.py
 ```
 
-32 tests, no dependencies. They cover spec validation, geometry (nothing
+37 tests, no dependencies. They cover spec validation, geometry (nothing
 overlaps, the zone encloses its nodes, sidecars stack), SVG well-formedness and
-escaping, and a full LZW round-trip through an independent decoder — including
-inputs long enough to force a code-width increase and a dictionary reset, which
-is where the encoder was wrong the first time.
+escaping, frame differencing, and a full LZW round-trip through an independent decoder —
+including inputs long enough to force a code-width increase and a dictionary
+reset, which is where the encoder was wrong the first time.
 
 ## Licence and attribution
 

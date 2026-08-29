@@ -120,8 +120,8 @@ def find_chrome():
     return None
 
 
-def make_gif(rend, out_svg, fps, hold):
-    """Rasterise every reveal step through Chrome, then encode a GIF."""
+def make_gif(rend, out_svg, frames, reveal, hold, scale):
+    """Rasterise the loop through Chrome, then encode a GIF."""
     import gifenc
 
     chrome = find_chrome()
@@ -131,23 +131,35 @@ def make_gif(rend, out_svg, fps, hold):
 
     tmp = out_svg.parent / f'.{out_svg.stem}-frames'
     tmp.mkdir(exist_ok=True)
-    w, h = int(rend.lay.width), int(rend.lay.height)
+    w, h = int(rend.lay.width * scale), int(rend.lay.height * scale)
+
+    if reveal:
+        # One frame per stage; the diagram builds up and rests on the finished one.
+        poses = [{'upto': i} for i in range(rend.max_order + 1)]
+        delays = [55] * len(poses)
+        delays[-1] = int(hold * 100)
+    else:
+        # A closed loop of the icon motion: last frame hands back to the first,
+        # so the GIF cycles without a visible seam.
+        poses = [{'t': i / frames} for i in range(frames)]
+        delays = [max(2, round(R.CYCLE * 100 / frames))] * frames
+
     pngs = []
     try:
-        for step in range(rend.max_order + 1):
-            f = tmp / f'f{step:02d}.svg'
-            f.write_text(rend.svg(upto=step), encoding='utf-8')
-            png = tmp / f'f{step:02d}.png'
+        for i, pose in enumerate(poses):
+            f = tmp / f'f{i:03d}.svg'
+            f.write_text(rend.svg(**pose), encoding='utf-8')
+            png = tmp / f'f{i:03d}.png'
             subprocess.run([chrome, '--headless', '--disable-gpu', '--hide-scrollbars',
+                            f'--force-device-scale-factor={scale}',
                             # resolve(): a relative -o path has no file: URI
-                            f'--window-size={w},{h}', f'--screenshot={png.resolve()}',
-                            f.resolve().as_uri()],
+                            f'--window-size={int(rend.lay.width)},{int(rend.lay.height)}',
+                            f'--screenshot={png.resolve()}', f.resolve().as_uri()],
                            check=True, capture_output=True)
             pngs.append(png)
-            print(f'  frame {step + 1}/{rend.max_order + 1}', file=sys.stderr)
+            print(f'\r  frame {i + 1}/{len(poses)}', end='', file=sys.stderr)
+        print('', file=sys.stderr)
 
-        delays = [int(100 / fps)] * len(pngs)
-        delays[-1] = int(hold * 100)          # rest on the finished diagram
         gif = out_svg.with_suffix('.gif')
         gifenc.write_gif(gif, [gifenc.read_png(p) for p in pngs], delays)
         return gif
@@ -164,8 +176,11 @@ def main():
     ap.add_argument('-o', '--output', type=pathlib.Path)
     ap.add_argument('--animate', action='store_true', help='also write a looping animated SVG')
     ap.add_argument('--gif', action='store_true', help='also write a GIF (needs Chrome)')
-    ap.add_argument('--fps', type=float, default=1.6, help='reveal speed for the GIF')
-    ap.add_argument('--hold', type=float, default=2.5, help='seconds on the final frame')
+    ap.add_argument('--reveal', action='store_true',
+                    help='build the diagram up stage by stage instead of looping icon motion')
+    ap.add_argument('--frames', type=int, default=30, help='frames in the motion loop')
+    ap.add_argument('--hold', type=float, default=2.5, help='seconds on the last reveal frame')
+    ap.add_argument('--scale', type=float, default=1.0, help='GIF pixel scale (0.6 for a smaller file)')
     ap.add_argument('--no-font', action='store_true', help='skip embedding Inter (smaller, less faithful)')
     args = ap.parse_args()
 
@@ -184,11 +199,12 @@ def main():
 
     if args.animate:
         anim = out.with_name(f'{out.stem}.anim.svg')
-        anim.write_text(rend.svg(animate=True), encoding='utf-8')
-        print(f'{anim}  {anim.stat().st_size / 1024:.0f} KB  {rend.max_order + 1} steps')
+        anim.write_text(rend.svg(animate=True, reveal=args.reveal), encoding='utf-8')
+        kind = f'{rend.max_order + 1} steps' if args.reveal else f'{R.CYCLE}s motion loop'
+        print(f'{anim}  {anim.stat().st_size / 1024:.0f} KB  {kind}')
 
     if args.gif:
-        gif = make_gif(rend, out, args.fps, args.hold)
+        gif = make_gif(rend, out, args.frames, args.reveal, args.hold, args.scale)
         print(f'{gif}  {gif.stat().st_size / 1024:.0f} KB')
 
 

@@ -150,6 +150,18 @@ class Svg(unittest.TestCase):
         sizes = [len(r.svg(upto=i)) for i in range(r.max_order + 1)]
         self.assertEqual(sizes, sorted(sizes), 'a later frame drew less than an earlier one')
 
+    def test_motion_poses_differ_and_static_has_none(self):
+        r = self.build(json.loads((ROOT / 'examples/harness.json').read_text()))
+        still = r.svg()
+        self.assertNotIn('m-swing', still)
+        self.assertNotEqual(r.svg(t=0.0), r.svg(t=0.3))
+
+    def test_animated_svg_declares_motion_and_respects_reduced_motion(self):
+        r = self.build(json.loads((ROOT / 'examples/harness.json').read_text()))
+        css = r.svg(animate=True)
+        self.assertIn('@keyframes m-swing', css)
+        self.assertIn('prefers-reduced-motion', css)
+
     def test_last_frame_equals_static(self):
         r = self.build(json.loads((ROOT / 'examples/harness.json').read_text()))
         self.assertEqual(r.svg(upto=r.max_order), r.svg())
@@ -254,6 +266,35 @@ class Gif(unittest.TestCase):
         palette, index, approx = gifenc.quantise(self.frames(3))
         self.assertIsNone(approx, 'should not approximate a 3-colour image')
         self.assertEqual(len(palette), 3)
+
+    def test_changed_box_is_none_when_identical(self):
+        px = [(1, 2, 3)] * 12
+        self.assertIsNone(gifenc._changed_box(px, list(px), 4, 3))
+
+    def test_changed_box_is_tight(self):
+        a = [(0, 0, 0)] * 25
+        b = list(a)
+        b[2 * 5 + 3] = (9, 9, 9)      # one pixel at x=3, y=2
+        self.assertEqual(gifenc._changed_box(a, b, 5, 5), (3, 2, 1, 1))
+
+    def test_differencing_shrinks_a_mostly_static_loop(self):
+        w = h = 24
+        base = [(240, 240, 240)] * (w * h)
+        frames = []
+        for k in range(8):
+            px = list(base)
+            px[k * w + k] = (10, 20, 30)   # one moving dot
+            frames.append((w, h, px))
+        delays = [8] * len(frames)
+        with tempfile.TemporaryDirectory() as d:
+            big = pathlib.Path(d) / 'full.gif'
+            small = pathlib.Path(d) / 'diff.gif'
+            gifenc.write_gif(big, frames, delays, diff=False)
+            gifenc.write_gif(small, frames, delays, diff=True)
+            self.assertLess(small.stat().st_size, big.stat().st_size)
+            for f in (big, small):
+                raw = f.read_bytes()
+                self.assertTrue(raw.startswith(b'GIF89a') and raw.endswith(b'\x3B'))
 
     def test_quantises_when_over_256(self):
         px = [(i % 256, (i // 256) % 256, i % 7) for i in range(20000)]
