@@ -22,7 +22,9 @@ import heapq
 GRID = 10               # planning resolution in px; finer is slower, not better
 TURN_COST = 14          # discourage staircases
 REUSE_COST = 9          # two links sharing a lane: keep them apart
-CROSS_COST = 11         # two links crossing at right angles: prefer not to
+CROSS_COST = 46         # two links crossing at right angles: go around instead.
+                        # Must exceed a detour's turn cost (2 x TURN_COST) or
+                        # the router buys a crossing rather than two corners.
 CLEARANCE = 8           # keep this far off icons and text
 ZONE_CROSS_COST = 7     # prefer the margins over cutting through a zone
 BORDER_COST = 5         # do not run along a zone's drawn border

@@ -24,6 +24,7 @@ import sys
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 
+import collide
 import routing
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
@@ -428,6 +429,81 @@ def port_label_offset(side_x, side_y, index: int = 0) -> tuple[int, int]:
     return 0, -13 + index * 15
 
 
+
+def _label_size(text: str) -> tuple[float, float]:
+    """Draw.io renders edge labels at 10px; this is close enough to reserve space."""
+    return 6.2 * len(str(text)) + 10, 16.0
+
+
+def _side_candidates(px, py, side_x, side_y):
+    """
+    Offsets to try for a port label, nearest first, fanning off the icon.
+
+    A busy switch can have six links on one side, so the fan has to be deep;
+    six positions per side left three labels stacked on the core switch of the
+    bundled example.
+    """
+    if side_y == 1:                       # bottom edge: clear the caption first
+        along, out, step = (1, 0), (0, 1), 20
+        base = 46
+    elif side_y == 0:                     # top edge
+        along, out, step = (1, 0), (0, -1), 20
+        base = 17
+    elif side_x == 1:                     # right edge
+        along, out, step = (0, 1), (1, 0), 18
+        base = 20
+    elif side_x == 0:                     # left edge
+        along, out, step = (0, 1), (-1, 0), 18
+        base = 20
+    else:
+        along, out, step, base = (1, 0), (0, -1), 18, 13
+
+    cands = []
+    for ring in range(3):                 # how far off the icon
+        d = base + ring * step
+        for k in (0, 1, -1, 2, -2, 3, -3):
+            ax = along[0] * k * 24 + out[0] * d
+            ay = along[1] * k * 22 + out[1] * d
+            if side_y in (0, 1):
+                ax += 22 * (1 if k >= 0 else -1)
+            else:
+                ay -= 13
+            cands.append((px + ax, py + ay))
+    return cands
+
+
+def _side_from_point(box, px, py):
+    """Which edge of the icon a path attaches to, from the attachment point."""
+    left, right = abs(px - box.x), abs(px - (box.x + box.w))
+    top, bottom = abs(py - box.y), abs(py - (box.y + box.h))
+    nearest = min(left, right, top, bottom)
+    if nearest == bottom:
+        return None, 1
+    if nearest == top:
+        return None, 0
+    if nearest == right:
+        return 1, None
+    return 0, None
+
+
+def _polyline_midpoint(points):
+    """The point halfway along a route, where draw.io puts a position-0 label."""
+    if not points:
+        return None
+    segs = list(zip(points, points[1:]))
+    total = sum(((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2) ** 0.5 for a, b in segs)
+    if total == 0:
+        return points[0]
+    walked = 0.0
+    for (ax, ay), (bx, by) in segs:
+        d = ((bx - ax) ** 2 + (by - ay) ** 2) ** 0.5
+        if walked + d >= total / 2:
+            t = (total / 2 - walked) / d if d else 0
+            return (ax + (bx - ax) * t, ay + (by - ay) * t)
+        walked += d
+    return points[-1]
+
+
 def edge_style(link: dict) -> str:
     parts = [
         "edgeStyle=orthogonalEdgeStyle",
@@ -613,28 +689,70 @@ def build_page(xml: XmlBuilder, page: dict, spec: dict,
         )
         waypoints_for[index] = path
 
+    # Every label — port and mid-line — is placed against one board holding the
+    # icons, the captions, the zone headers and every routed path. Staggering by
+    # rank only kept a device's own labels apart; it could not see the label of
+    # a different link arriving from elsewhere, which is how "Fiber" and "LAN"
+    # ended up printed on top of each other.
+    board = collide.Board()
+    for nid in cell_ids:
+        b = nodes_by_id[nid]["_abs"]
+        board.block((b.x, b.y, b.w, b.h), nid)
+        cap = caption_box(nodes_by_id[nid])
+        board.block((cap.x, cap.y, cap.w, cap.h), f'{nid} caption')
+    for i, pts in waypoints_for.items():
+        if pts:
+            board.path(pts, f'link{i}')
+
+    def place(text, px, py, cands, name, ignore=()):
+        w, h = _label_size(text)
+        cx, cy = board.place_label(cands, w, h, name, ignore)
+        return int(round(cx - px)), int(round(cy - py))
+
     for index, (link, resolved) in enumerate(drawable):
         eid = xml.next_id("e")
-        # The mid-line label is a child cell rather than the edge's own value,
-        # so links converging on one device can stagger their labels instead of
-        # printing on top of each other.
         xml.edge(eid, "", edge_style({**link, **resolved}), root,
                  cell_ids[link["from"]], cell_ids[link["to"]],
                  waypoints_for.get(index))
+
+        mine = (f'link{index}',)
         if link.get("label"):
-            n = stagger(link["to"], "mid", None)
-            xml.edge_label(xml.next_id("m"), link["label"], eid, 0, 0, n * 16)
-        # Pin port labels to the exact endpoint, then nudge them in pixels away
-        # from the side the link leaves on. A fractional position alone lands
-        # them on top of the icon's caption whenever the link runs vertically.
-        if link.get("fromPort"):
-            sx, sy = resolved.get("exitX"), resolved.get("exitY")
-            dx, dy = port_label_offset(sx, sy, stagger(link["from"], sx, sy))
-            xml.edge_label(xml.next_id("l"), link["fromPort"], eid, -1, dx, dy)
-        if link.get("toPort"):
-            sx, sy = resolved.get("entryX"), resolved.get("entryY")
-            dx, dy = port_label_offset(sx, sy, stagger(link["to"], sx, sy))
-            xml.edge_label(xml.next_id("l"), link["toPort"], eid, 1, dx, dy)
+            mid = _polyline_midpoint(waypoints_for.get(index) or [])
+            if mid is None:
+                a = nodes_by_id[link["from"]]["_abs"]
+                b = nodes_by_id[link["to"]]["_abs"]
+                mid = ((a.x + a.w / 2 + b.x + b.w / 2) / 2, (a.y + a.h / 2 + b.y + b.h / 2) / 2)
+            mx, my = mid
+            cands = [(mx, my - 12), (mx, my + 14), (mx, my - 30), (mx, my + 32),
+                     (mx + 40, my - 12), (mx - 40, my - 12), (mx, my - 48)]
+            dx, dy = place(link["label"], mx, my, cands, f'{link["from"]}-{link["to"]} label', mine)
+            xml.edge_label(xml.next_id("m"), link["label"], eid, 0, dx, dy)
+
+        for end, port_key, box_key, fx_key, fy_key in (
+                (-1, "fromPort", "from", "exitX", "exitY"),
+                (1, "toPort", "to", "entryX", "entryY")):
+            if not link.get(port_key):
+                continue
+            b = nodes_by_id[link[box_key]]["_abs"]
+            sx, sy = resolved.get(fx_key), resolved.get(fy_key)
+            # The routed path's own end is where draw.io actually attaches the
+            # edge. exitX/exitY are often absent, and defaulting those to the
+            # icon centre put the predicted label rect metres from the real one,
+            # so the board cleared a slot that was never the slot used.
+            pts = waypoints_for.get(index) or []
+            if pts:
+                px, py = pts[0] if end == -1 else pts[-1]
+                sx, sy = _side_from_point(b, px, py)
+            else:
+                px = b.x + (sx if sx is not None else 0.5) * b.w
+                py = b.y + (sy if sy is not None else 0.5) * b.h
+            cands = _side_candidates(px, py, sx, sy)
+            dx, dy = place(link[port_key], px, py, cands,
+                           f'{link[box_key]}.{link[port_key]}', mine + (link[box_key],))
+            xml.edge_label(xml.next_id("l"), link[port_key], eid, end, dx, dy)
+
+    for w in board.warnings:
+        print(f'  warning: {w}', file=sys.stderr)
 
     body = "".join(xml.parts)
     return (

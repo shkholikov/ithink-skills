@@ -134,6 +134,18 @@ replacing white globally, so white *inside* an icon survives. It then trims,
 upscales to 256px, and quantizes to a 64-colour palette — which cuts the asset
 folder from 12 MB to 2.3 MB with no visible loss.
 
+## Layout rules
+
+Links route around icons, captions and zone headers, and a crossing now costs
+more than the detour around it — the router used to buy a crossing because it
+was cheaper than two corners.
+
+Labels are placed against everything already on the page, not staggered per
+device. The old scheme kept one device's labels apart but could not see a label
+belonging to a link arriving from elsewhere, which is how two of them ended up
+printed on top of each other. Anything that cannot be placed clear is named on
+stderr rather than drawn over.
+
 ## Licence and attribution
 
 The code is MIT licensed — see the [repository LICENSE](../LICENSE).

@@ -26,6 +26,18 @@ Do not try to make the generated layout perfect. Make it correct and readable.
    Stdlib only — works on macOS, Linux, and inside Claude's sandbox.
 4. **Read the warnings.** Any icon it could not match is listed on stderr and
    drawn as a dashed grey placeholder box. Fix the icon name and re-run.
+
+   Labels report too. Every port and mid-line label is placed against a board
+   holding the icons, captions, zone headers and every routed path, and takes
+   the first position touching nothing:
+
+   ```
+     warning: label 'core.p9' overlaps core.p22; no free slot among 21 positions
+   ```
+
+   That means two labels are printed on top of each other. It is a real defect
+   in the output, not a cosmetic note — usually too many links converging on
+   one device. Move a link to a different port side, or split the device.
 5. **Export an image** if the user wants one, and if `drawio` is on PATH:
    ```bash
    drawio -x -f png -s 2 -o topology.png topology.drawio
