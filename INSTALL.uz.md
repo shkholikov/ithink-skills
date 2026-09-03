@@ -26,6 +26,10 @@ fayllarni yuklab oling:
 
 Uchalasini ham yuklab olishingiz mumkin, faqat kerakligini ham.
 
+> Assets ro'yxatida **Source code** (zip va tar.gz) ham turadi — ularni
+> yuklab olmang. Bu butun loyihaning nusxasi, skill emas; Claude uni qabul
+> qilmaydi. Faqat yuqoridagi uchta `-skill.zip` fayl kerak.
+
 > `.zip` faylni **ochmang** va **arxivdan chiqarmang**. Claude'ga aynan
 > `.zip` ko'rinishida yuklanadi. macOS Safari arxivni avtomatik ochib
 > yuborishi mumkin — bunday holda Yuklamalar papkasidagi papkani o'ng
