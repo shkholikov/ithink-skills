@@ -69,6 +69,10 @@ git tag v1.1.0 && git push origin v1.1.0
 git tag system-diagram-v1.1.0 && git push origin system-diagram-v1.1.0
 ```
 
+The same workflow can be run by hand from the **Actions** tab — supply the
+version and it creates the tag from the current commit, which is the way in
+when you cannot push tags directly.
+
 ## Design rules
 
 Every skill here follows the same constraints, so they all behave the same way

@@ -1,10 +1,10 @@
 name: Release skill zips
 
-# Two tag shapes, both producing zips people can upload at
-# Settings -> Capabilities -> Skills on claude.ai:
+# Produces zips people upload at Settings -> Capabilities -> Skills on
+# claude.ai. Two ways in:
 #
-#   v1.2.0                     -> all three skills in one release
-#   system-diagram-v1.1.0      -> just that skill
+#   push a tag         v1.2.0 -> all three skills, system-diagram-v1.1.0 -> one
+#   run it by hand     supply the version; gh creates the tag from this commit
 on:
   push:
     tags:
@@ -13,6 +13,11 @@ on:
       - 'system-diagram-v*'
       - 'ithink-documents-v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. v1.1.0 (or system-diagram-v1.1.0 for one skill)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -23,16 +28,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Decide which skills this tag covers
+      - name: Resolve the version and which skills it covers
         id: scope
         run: |
-          tag="${GITHUB_REF_NAME}"
-          case "$tag" in
+          version="${{ inputs.version || github.ref_name }}"
+          case "$version" in
             topology-creator-v*) skills="topology-creator" ;;
             system-diagram-v*)   skills="system-diagram" ;;
             ithink-documents-v*) skills="ithink-documents" ;;
-            *)                   skills="topology-creator system-diagram ithink-documents" ;;
+            v*)                  skills="topology-creator system-diagram ithink-documents" ;;
+            *) echo "error: version '$version' must start with v or <skill>-v" >&2; exit 1 ;;
           esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "skills=$skills" >> "$GITHUB_OUTPUT"
 
       - name: Run the skill test suites
@@ -45,7 +52,7 @@ jobs:
           done
 
       - name: Build the zips
-        run: ./scripts/package.sh --version "${GITHUB_REF_NAME}" ${{ steps.scope.outputs.skills }}
+        run: ./scripts/package.sh --version "${{ steps.scope.outputs.version }}" ${{ steps.scope.outputs.skills }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -53,9 +60,9 @@ jobs:
           path: dist/*.zip
 
       - name: Publish the release
-        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.scope.outputs.version }}
         run: |
           cat > notes.md <<'NOTES'
           Download a skill's `.zip` below, then upload it in the Claude app at
@@ -65,6 +72,9 @@ jobs:
           [O'zbekcha](https://github.com/shkholikov/ithink-skills/blob/main/INSTALL.uz.md)
           · [Русский](https://github.com/shkholikov/ithink-skills/blob/main/INSTALL.ru.md)
           NOTES
-          gh release create "${GITHUB_REF_NAME}" dist/*.zip \
-            --title "${GITHUB_REF_NAME}" \
+          # --target makes gh create the tag from this commit when it does not
+          # already exist, so a release needs no separate tag push.
+          gh release create "$VERSION" dist/*.zip \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
             --notes-file notes.md
