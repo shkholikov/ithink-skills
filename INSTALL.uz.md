@@ -58,6 +58,30 @@ Boshqa misollar:
 >
 > Mijoz uchun tijorat taklifi tayyorla — server infratuzilmasini yangilash bo'yicha
 
+## Yangilash
+
+Skill sizning Claude hisobingizda saqlanadi — kompyuterda emas, balki
+Anthropic serverida, faqat siz uchun. Shuning uchun uchta narsani bilib
+qo'ying:
+
+- **Avtomatik yangilanmaydi.** Biz yangi versiya chiqarsak, sizdagi eski
+  nusxa o'zi o'zgarmaydi — qo'lda qayta yuklashingiz kerak.
+- **claude.ai va Claude Desktop alohida.** Ikkalasida ishlatmoqchi
+  bo'lsangiz, har biriga alohida yuklang.
+- **Qaysi versiya turganini bilish uchun** Claude'dan so'rang:
+  «topology-creator skillning qaysi versiyasi sizda bor?». Javobni
+  [Releases sahifasidagi](https://github.com/shkholikov/ithink-skills/releases/latest)
+  raqam bilan solishtiring.
+
+Yangilash tartibi:
+
+1. Yangi `.zip` ni Releases sahifasidan yuklab oling
+2. Settings → Capabilities → Skills bo'limida **eski skillni o'chiring**
+3. Yangi `.zip` ni yuklang
+4. **Yangi suhbat oching.** Claude skillar ro'yxatini suhbat boshlanganda
+   o'qiydi, shuning uchun ochiq turgan eski chatda hamon eski versiya
+   ishlaydi
+
 ---
 
 ## Muammolar

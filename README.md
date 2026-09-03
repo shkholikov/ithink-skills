@@ -53,6 +53,12 @@ claude.ai expects — a zip with `SKILL.md` at the root is rejected. The script
 checks this before it finishes, and drops build noise plus topology-creator's
 3.9 MB `examples/` gallery, which nothing in its `SKILL.md` reads.
 
+It also stamps the version into each `SKILL.md` body inside the zip, so someone
+can ask Claude which version they have and compare it against the latest
+release. The stamp goes in the body rather than the frontmatter because
+claude.ai validates frontmatter and accepts only `name` and `description` there.
+Your working tree is never modified — the edit happens in a staging copy.
+
 Pushing a tag runs the test suites, builds the zips and publishes a release:
 
 ```bash

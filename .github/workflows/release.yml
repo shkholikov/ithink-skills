@@ -45,7 +45,7 @@ jobs:
           done
 
       - name: Build the zips
-        run: ./scripts/package.sh ${{ steps.scope.outputs.skills }}
+        run: ./scripts/package.sh --version "${GITHUB_REF_NAME}" ${{ steps.scope.outputs.skills }}
 
       - uses: actions/upload-artifact@v4
         with:
