@@ -17,6 +17,16 @@ to drop into `~/.claude/skills/` or upload to claude.ai.
 
 ## Install
 
+### Claude Desktop, web and mobile
+
+Download a skill's `.zip` from the
+[latest release](https://github.com/shkholikov/ithink-skills/releases/latest)
+and upload it at **Settings → Capabilities → Skills**. Nothing to clone, no
+terminal needed.
+
+Step-by-step guides for colleagues, with troubleshooting:
+**[O'zbekcha](INSTALL.uz.md)** · **[Русский](INSTALL.ru.md)**
+
 ### Claude Code
 
 ```bash
@@ -29,16 +39,28 @@ cp -R ithink-skills/system-diagram  ~/.claude/skills/
 Restart Claude Code. Each skill folder is self-contained — copy only the ones you
 want.
 
-### Claude Desktop / web / mobile
+## Releasing
 
-Download a skill's `.zip` from
-[Releases](https://github.com/shkholikov/ithink-skills/releases) and upload it at
-**Settings → Capabilities → Skills**.
-
-Or build one yourself from a clone:
+`scripts/package.sh` builds the uploadable zips into `dist/`:
 
 ```bash
-cd ithink-skills && zip -r topology-creator-skill.zip topology-creator
+./scripts/package.sh                  # all skills
+./scripts/package.sh system-diagram   # just one
+```
+
+Each zip holds the skill folder as its single top-level entry, which is what
+claude.ai expects — a zip with `SKILL.md` at the root is rejected. The script
+checks this before it finishes, and drops build noise plus topology-creator's
+3.9 MB `examples/` gallery, which nothing in its `SKILL.md` reads.
+
+Pushing a tag runs the test suites, builds the zips and publishes a release:
+
+```bash
+# all three skills
+git tag v1.1.0 && git push origin v1.1.0
+
+# just one skill
+git tag system-diagram-v1.1.0 && git push origin system-diagram-v1.1.0
 ```
 
 ## Design rules

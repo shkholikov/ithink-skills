@@ -10,3 +10,6 @@ __pycache__/
 
 # Build artefacts — attach to a GitHub Release instead of committing.
 *-skill.zip
+
+# Built skill zips — attached to a GitHub Release instead of committed.
+dist/

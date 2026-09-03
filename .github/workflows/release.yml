@@ -1,0 +1,70 @@
+name: Release skill zips
+
+# Two tag shapes, both producing zips people can upload at
+# Settings -> Capabilities -> Skills on claude.ai:
+#
+#   v1.2.0                     -> all three skills in one release
+#   system-diagram-v1.1.0      -> just that skill
+on:
+  push:
+    tags:
+      - 'v*'
+      - 'topology-creator-v*'
+      - 'system-diagram-v*'
+      - 'ithink-documents-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decide which skills this tag covers
+        id: scope
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          case "$tag" in
+            topology-creator-v*) skills="topology-creator" ;;
+            system-diagram-v*)   skills="system-diagram" ;;
+            ithink-documents-v*) skills="ithink-documents" ;;
+            *)                   skills="topology-creator system-diagram ithink-documents" ;;
+          esac
+          echo "skills=$skills" >> "$GITHUB_OUTPUT"
+
+      - name: Run the skill test suites
+        run: |
+          for skill in ${{ steps.scope.outputs.skills }}; do
+            if [ -d "$skill/tests" ]; then
+              echo "== $skill =="
+              ( cd "$skill" && for t in tests/test_*.py; do python3 "$t"; done )
+            fi
+          done
+
+      - name: Build the zips
+        run: ./scripts/package.sh ${{ steps.scope.outputs.skills }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skill-zips
+          path: dist/*.zip
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<'NOTES'
+          Download a skill's `.zip` below, then upload it in the Claude app at
+          **Settings -> Capabilities -> Skills**.
+
+          Step-by-step install guides:
+          [O'zbekcha](https://github.com/shkholikov/ithink-skills/blob/main/INSTALL.uz.md)
+          · [Русский](https://github.com/shkholikov/ithink-skills/blob/main/INSTALL.ru.md)
+          NOTES
+          gh release create "${GITHUB_REF_NAME}" dist/*.zip \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file notes.md
