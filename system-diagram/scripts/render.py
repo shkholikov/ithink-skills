@@ -36,6 +36,20 @@ INK_FAINT = 'rgba(30,32,34,0.44)'
 
 _ICONS = json.loads((ASSETS / 'icons.json').read_text(encoding='utf-8'))
 
+# The ITHINK lockup is the only branding in the header, and it is always there.
+# `plain` (no tagline) because brand.md switches to it below 200px wide, which
+# every diagram header is.
+LOGO_W = 150
+LOGO_H = round(LOGO_W * 145 / 450)     # asset is 450x145
+
+
+def _logo_href(_cache=[]):
+    if not _cache:
+        import base64
+        b64 = base64.b64encode((ASSETS / 'ithink-logo.png').read_bytes()).decode('ascii')
+        _cache.append(f'data:image/png;base64,{b64}')
+    return _cache[0]
+
 # One loop length for everything, so the whole diagram returns to its starting
 # pose together and the GIF cycles seamlessly.
 CYCLE = 2.4
@@ -147,8 +161,7 @@ class Renderer:
             lw = text_w(z['label'], 12, True) + 34
             self.board.block((z['x'] + 22, z['y'] - 17, lw, 34), 'zone-tab')
 
-        if spec.get('title'):
-            self.add(0, self._header())
+        self.add(0, self._header())
         if lay.zone:
             self.add(0, self._zone())
 
@@ -175,34 +188,31 @@ class Renderer:
     # -- pieces ------------------------------------------------------------
 
     def _header(self):
+        """
+        Title, one line of description, and the ITHINK logo on the right.
+
+        Nothing else. The title shrinks rather than running under the logo —
+        text width is approximated, so the floor is generous on purpose.
+        """
         spec = self.spec
         x, y = L.MARGIN, L.MARGIN + 26
-        title, hi = spec['title'], spec.get('highlight')
         parts = []
-        parts.append(f'<rect x="{x - 16:.0f}" y="{y - 30:.0f}" width="6" height="46" rx="3" fill="{BLUE}"/>')
-        if hi and hi in title:
-            head, tail = title.split(hi, 1)
-            cx = x
-            if head.strip():
-                parts.append(f'<text x="{cx:.0f}" y="{y:.0f}" font-size="38" font-weight="800" '
-                             f'fill="{NAVY}" letter-spacing="-0.02em">{esc(head.strip())}</text>')
-                cx += text_w(head.strip(), 38, True) + 18
-            w = text_w(hi, 38, True) + 28
-            parts.append(f'<rect x="{cx:.0f}" y="{y - 34:.0f}" width="{w:.0f}" height="50" rx="8" fill="{BLUE}"/>')
-            parts.append(f'<text x="{cx + 14:.0f}" y="{y:.0f}" font-size="38" font-weight="800" '
-                         f'fill="#ffffff" letter-spacing="-0.02em">{esc(hi)}</text>')
-            if tail.strip():
-                parts.append(f'<text x="{cx + w + 9:.0f}" y="{y:.0f}" font-size="38" font-weight="800" '
-                             f'fill="{NAVY}" letter-spacing="-0.02em">{esc(tail.strip())}</text>')
-        else:
-            parts.append(f'<text x="{x:.0f}" y="{y:.0f}" font-size="38" font-weight="800" '
+
+        logo_x = self.lay.width - L.MARGIN - LOGO_W
+        parts.append(f'<image x="{logo_x:.0f}" y="{y - 24:.0f}" width="{LOGO_W}" height="{LOGO_H}" '
+                     f'href="{_logo_href()}" preserveAspectRatio="xMidYMid meet"/>')
+
+        avail = logo_x - L.MARGIN - 32
+        title = spec.get('title')
+        if title:
+            size = 38
+            while size > 24 and text_w(title, size, True) > avail:
+                size -= 2
+            parts.append(f'<text x="{x:.0f}" y="{y:.0f}" font-size="{size}" font-weight="800" '
                          f'fill="{NAVY}" letter-spacing="-0.02em">{esc(title)}</text>')
         if spec.get('subtitle'):
             parts.append(f'<text x="{x:.0f}" y="{y + 28:.0f}" font-size="14" fill="{INK_SOFT}">'
                          f'{esc(spec["subtitle"])}</text>')
-        if spec.get('brand'):
-            parts.append(f'<text x="{self.lay.width - L.MARGIN:.0f}" y="{y - 6:.0f}" text-anchor="end" '
-                         f'font-size="15" font-weight="700" fill="{NAVY}">{esc(spec["brand"])}</text>')
         return f'<g>{"".join(parts)}</g>'
 
     def _zone(self):

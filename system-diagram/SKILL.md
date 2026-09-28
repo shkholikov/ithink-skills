@@ -41,7 +41,7 @@ Full schema in `references/spec-schema.md`, worked example in
 
 ```json
 {
-  "title": "What is X?", "highlight": "X", "subtitle": "one line", "brand": "ITHINK",
+  "title": "What is X?", "subtitle": "one line of description",
   "nodes":    [{"id": "a", "label": "Stage", "sub": "what it does", "step": 1,
                 "tone": "blue", "shape": "box", "icon": "database",
                 "tiles": [{"icon": "file-text", "label": "Docs"}]}],
@@ -52,6 +52,10 @@ Full schema in `references/spec-schema.md`, worked example in
                 "label": "feedback"}]
 }
 ```
+
+The header takes only those two strings. It is title, description and the
+ITHINK logo top right — the logo is embedded and always drawn, so there is no
+field to set it and nothing else goes in the band.
 
 `flow` is the column and must connect flow nodes. `links` is everything else —
 sidecar tethers and feedback loops. A feedback edge takes `"route": "gutter"`
@@ -176,6 +180,7 @@ than forcing it.
 | `references/spec-schema.md` | Every field, with what happens when it is wrong |
 | `references/icons.md` | The 98 icon names, grouped by what they depict |
 | `references/palette.md` | The tone ramp, and how it derives from the ITHINK palette |
+| `assets/ithink-logo.png` | The lockup drawn in every header, embedded at build time |
 | `examples/harness.json` | Worked example — the diagram in the README |
 | `scripts/build_diagram.py` | Validate, lay out, render, animate, encode |
 | `scripts/layout.py` | Geometry and text metrics |

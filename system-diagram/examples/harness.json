@@ -1,8 +1,6 @@
 {
   "title": "What is Harness Engineering?",
-  "highlight": "Harness Engineering",
   "subtitle": "The reliability layer around the LLM",
-  "brand": "ITHINK",
 
   "nodes": [
     {"id": "goal", "label": "User Goal", "shape": "pill", "tone": "neutral", "icon": "target"},

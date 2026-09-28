@@ -171,6 +171,29 @@ class Svg(unittest.TestCase):
         s = spec(links=[{'from': 'a', 'to': 'b', 'style': 'solid'}])
         self.assertNotIn('stroke-dasharray', self.build(s).svg().split('<defs>')[-1])
 
+    def test_logo_is_embedded_on_every_diagram(self):
+        """Titled or not, the lockup is there and it is inlined, not linked."""
+        for sp in (spec(), spec(title='A system', subtitle='what it does')):
+            svg = self.build(sp).svg()
+            self.assertIn('data:image/png;base64,', svg)
+            self.assertEqual(svg.count('<image'), 1)
+
+    def test_header_carries_nothing_but_title_subtitle_and_logo(self):
+        r = self.build(spec(title='A system', subtitle='what it does'))
+        head = r._header()
+        self.assertIn('A system', head)
+        self.assertIn('what it does', head)
+        self.assertEqual(head.count('<rect'), 0, 'no accent bar, no highlight box')
+        self.assertEqual(head.count('<text'), 2, 'title and subtitle, nothing else')
+
+    def test_long_title_shrinks_clear_of_the_logo(self):
+        import re
+        big = self.build(spec(title='Short'))
+        small = self.build(spec(title='A considerably longer headline than fits ' * 2))
+        size = lambda svg: int(re.search(r'font-size="(\d+)" font-weight="800"', svg).group(1))
+        self.assertEqual(size(big.svg()), 38)
+        self.assertLess(size(small.svg()), 38)
+
     def test_no_external_references(self):
         svg = self.build(json.loads((ROOT / 'examples/harness.json').read_text())).svg()
         self.assertNotIn('http://', svg.replace('http://www.w3.org', ''))

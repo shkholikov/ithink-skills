@@ -8,8 +8,8 @@ glance, and five tints of one blue are not distinguishable.
 So this skill extends the brand rather than ignoring it, under two rules:
 
 1. **Structure stays brand.** Navy for headings, badges and the zone tab. Blue
-   for the title highlight and the zone frame. Body text is ink. Ground is
-   paper. None of that changes.
+   for the zone frame. Body text is ink. Ground is paper. The header carries
+   the logo itself. None of that changes.
 2. **Stage tints are pale.** Every tone is a near-white fill with a saturated
    border. On paper they read as one family; nothing competes with the navy
    badges or the blue accents.

@@ -55,7 +55,7 @@ SIDE_W = 268          # sidecar card width
 SIDE_GAP = 56
 VGAP = 62             # vertical space between flow nodes, holds the edge label
 
-HEAD_H = 104          # title band
+HEAD_H = 104          # title band: title, subtitle, logo
 TILE_H = 92           # icon-tile strip inside a node
 
 SHAPE_H = {
@@ -95,7 +95,7 @@ class Layout:
         if has_side:
             self.width += SIDE_GAP + SIDE_W
 
-        y = MARGIN + (HEAD_H if spec.get('title') else 0)
+        y = MARGIN + HEAD_H          # always reserved: the logo sits there even untitled
 
         zone_ids = set()
         zone = spec.get('zone')

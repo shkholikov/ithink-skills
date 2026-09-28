@@ -30,7 +30,7 @@ The spec is JSON — stages in order, plus what sits beside them:
 ```json
 {
   "title": "What is Harness Engineering?",
-  "highlight": "Harness Engineering",
+  "subtitle": "The reliability layer around the LLM",
   "nodes": [
     {"id": "ctx", "label": "Context Builder", "sub": "live facts + state",
      "step": 1, "tone": "blue",

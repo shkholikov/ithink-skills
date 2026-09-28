@@ -11,15 +11,17 @@ quietly wrong about a system is worse than no diagram.
 
 | Field | Type | What it does |
 |---|---|---|
-| `title` | string | Headline. Omit for a bare diagram with no title band |
-| `highlight` | string | A substring of `title` set in a blue box, ByteByteGo style. Ignored if it is not in the title |
-| `subtitle` | string | One line under the title |
-| `brand` | string | Set top right. `"ITHINK"` |
+| `title` | string | Headline. Shrinks from 38px if it would reach the logo |
+| `subtitle` | string | One line of description under the title |
 | `nodes` | list | **Required.** The vertical column, in order |
 | `zone` | object | A frame drawn around a run of nodes |
 | `sidecars` | list | Cards in the right margin |
 | `flow` | list | Arrows down the column |
 | `links` | list | Everything else — tethers and feedback loops |
+
+The header is title, description and the ITHINK logo — nothing else, and none
+of it is styled from the spec. The logo is drawn top right on every diagram,
+including one with no title at all, so the band is always reserved.
 
 ## nodes
 
