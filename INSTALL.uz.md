@@ -92,8 +92,24 @@ Skill **Claude in Chrome** kengaytmasida, to'g'ridan-to'g'ri
    so'raydi. Bu skill qoidalari ustidan ikkinchi himoya
 3. `amocrm-expert` skilli (yoki **ithink** plagini) yoqilganini
    tekshiring — hisobdagi skill va plaginlar Chrome yon panelida mavjud
-4. Mijoz hisobini oching va yon panelda yozing: «Qaysi hisobda ishlayapmiz
-   va bu yerda qaysi vidjetlar o'rnatilgan?»
+4. Skill ishonchli yoqilishi uchun profilga bitta qator qo'shing:
+   claude.ai → **Settings** → **Profile** → «What personal preferences
+   should Claude consider in responses?» maydoni:
+
+   > Когда я работаю в amoCRM или в кабинете виджета (Wazzup, OnlinePBX,
+   > Zadarma), всегда используй навык amocrm-expert. Отвечай по-русски.
+
+   Claude bu maydonni har bir suhbatda, jumladan Chrome'da ham o'qiydi.
+   (Javoblar o'zbekcha bo'lishini istasangiz, oxirgi gapni «Отвечай
+   по-узбекски» ga almashtiring.)
+5. Mijoz hisobini oching va yon panelda yozing: «Qaysi hisobda ishlayapmiz
+   va bu yerda qaysi vidjetlar o'rnatilgan?» Javob «Работаем в аккаунте …»
+   bilan boshlansa — skill ulangan.
+
+**Skillni qanday aniq chaqirish mumkin.** Odatda Claude amoCRM haqida gap
+ketganda skillni o'zi yoqadi. Yoqmasa — xabarni «Используй навык
+amocrm-expert:» so'zlari bilan boshlang, masalan: «Используй навык
+amocrm-expert: почему не приходят сообщения из WhatsApp?».
 
 U qanday ishlaydi:
 
