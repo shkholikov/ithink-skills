@@ -3,7 +3,7 @@ name: Release skill zips
 # Produces zips people upload at Settings -> Capabilities -> Skills on
 # claude.ai. Two ways in:
 #
-#   push a tag         v1.2.0 -> all three skills, system-diagram-v1.1.0 -> one
+#   push a tag         v1.2.0 -> all skills, system-diagram-v1.1.0 -> one
 #   run it by hand     supply the version; gh creates the tag from this commit
 on:
   push:
@@ -12,6 +12,7 @@ on:
       - 'topology-creator-v*'
       - 'system-diagram-v*'
       - 'ithink-documents-v*'
+      - 'amocrm-expert-v*'
   workflow_dispatch:
     inputs:
       version:
@@ -36,7 +37,8 @@ jobs:
             topology-creator-v*) skills="topology-creator" ;;
             system-diagram-v*)   skills="system-diagram" ;;
             ithink-documents-v*) skills="ithink-documents" ;;
-            v*)                  skills="topology-creator system-diagram ithink-documents" ;;
+            amocrm-expert-v*)    skills="amocrm-expert" ;;
+            v*)                  skills="topology-creator system-diagram ithink-documents amocrm-expert" ;;
             *) echo "error: version '$version' must start with v or <skill>-v" >&2; exit 1 ;;
           esac
           echo "version=$version" >> "$GITHUB_OUTPUT"

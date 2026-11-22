@@ -12,7 +12,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-ALL_SKILLS=(topology-creator system-diagram ithink-documents)
+ALL_SKILLS=(topology-creator system-diagram ithink-documents amocrm-expert)
 RELEASES_URL="https://github.com/shkholikov/ithink-skills/releases/latest"
 
 # Always dropped — build noise that would only bloat the upload.
@@ -96,7 +96,9 @@ PY
     echo "error: $zipfile has top-level entries '$tops', expected only '$skill'" >&2
     exit 1
   fi
-  unzip -Z1 "$zipfile" | grep -qx "$skill/SKILL.md" || {
+  # grep -q would exit on the first match and SIGPIPE unzip, which pipefail
+  # reports as a failure on large zips; read the whole listing instead.
+  unzip -Z1 "$zipfile" | grep -x "$skill/SKILL.md" >/dev/null || {
     echo "error: $zipfile is missing $skill/SKILL.md" >&2
     exit 1
   }

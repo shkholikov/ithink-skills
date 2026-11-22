@@ -9,6 +9,7 @@ to drop into `~/.claude/skills/` or upload to claude.ai.
 |---|---|
 | [**topology-creator**](topology-creator) | Turns a described network into an editable **draw.io** diagram — Cisco icons, zone boxes, interface labels on both ends of every link, colour-coded VLANs, obstacle-avoiding link routing, and a generated legend page. |
 | [**system-diagram**](system-diagram) | Turns a described system into an explanatory diagram — vertical flow, zone frame, sidecars for what watches or constrains it, feedback loops routed clear of the column. Emits a self-contained **SVG**, a looping animated SVG, and a real **GIF**. |
+| [**amocrm-expert**](amocrm-expert) | An amoCRM integrator co-pilot for Claude in Chrome — diagnoses and sets up widgets (Wazzup, OnlinePBX, Zadarma), Salesbot and pipelines in a client's account, answers in Russian, and changes nothing until a **change card** listing every side effect gets an explicit yes. |
 | [**ithink-documents**](ithink-documents) | Writes client-facing ITHINK documents — commercial offers, presentations, technical proposals, one-pagers — on the fixed brand system, then inlines Inter and the logos so the result publishes as an artifact and prints to A4 PDF. |
 
 ![topology-creator output](topology-creator/examples/small-office.png)
@@ -24,6 +25,20 @@ Download a skill's `.zip` from the
 and upload it at **Settings → Capabilities → Skills**. Nothing to clone, no
 terminal needed.
 
+### All skills in one install (Cowork plugin)
+
+The repo is also a plugin marketplace. In Claude Desktop: **Cowork → Customize →
+Plugins → Add marketplace**, enter `shkholikov/ithink-skills`, then install the
+**ithink** plugin from **Discover**. It carries every skill and updates from this
+repo.
+
+In Claude Code:
+
+```
+/plugin marketplace add shkholikov/ithink-skills
+/plugin install ithink@ithink-skills
+```
+
 Step-by-step guides for colleagues, with troubleshooting:
 **[O'zbekcha](INSTALL.uz.md)** · **[Русский](INSTALL.ru.md)**
 
@@ -34,6 +49,7 @@ git clone https://github.com/shkholikov/ithink-skills
 cp -R ithink-skills/topology-creator ~/.claude/skills/
 cp -R ithink-skills/ithink-documents ~/.claude/skills/
 cp -R ithink-skills/system-diagram  ~/.claude/skills/
+cp -R ithink-skills/amocrm-expert   ~/.claude/skills/
 ```
 
 Restart Claude Code. Each skill folder is self-contained — copy only the ones you

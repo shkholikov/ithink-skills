@@ -1,0 +1,25 @@
+{
+  "name": "ithink-skills",
+  "owner": {
+    "name": "ITHINK",
+    "url": "https://github.com/shkholikov/ithink-skills"
+  },
+  "metadata": {
+    "description": "ITHINK skills for Claude: network topology, system diagrams, client documents and an amoCRM integrator co-pilot."
+  },
+  "plugins": [
+    {
+      "name": "ithink",
+      "description": "All ITHINK skills in one install: topology-creator, system-diagram, ithink-documents, amocrm-expert.",
+      "version": "1.0.0",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./topology-creator",
+        "./system-diagram",
+        "./ithink-documents",
+        "./amocrm-expert"
+      ]
+    }
+  ]
+}
