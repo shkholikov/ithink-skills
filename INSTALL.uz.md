@@ -4,8 +4,8 @@ Bu qo'llanma ITHINK xodimlari uchun. Dasturchi bo'lish shart emas —
 terminal ham, `git` ham kerak emas. Taxminan 3 daqiqa vaqt oladi.
 
 Skill — bu Claude'ga qo'shiladigan qo'shimcha malaka. O'rnatgandan keyin
-Claude tarmoq sxemasi, tizim diagrammasi yoki ITHINK hujjatlarini
-qanday tayyorlashni biladi.
+Claude tarmoq sxemasi, tizim diagrammasi, ITHINK hujjatlarini
+tayyorlashni va amoCRM sozlashda yordam berishni biladi.
 
 **Kerak bo'ladi:** Claude Pro obunasi va [claude.ai](https://claude.ai)
 saytidagi hisob.
@@ -23,12 +23,13 @@ fayllarni yuklab oling:
 | `topology-creator-skill.zip` | Tarmoq topologiyasi sxemasi — Cisco ikonkalari, VLAN ranglari, port belgilari. Natija: draw.io fayli, uni tahrirlash mumkin |
 | `system-diagram-skill.zip` | Tizim va jarayon diagrammasi — SVG, animatsiyali SVG va GIF |
 | `ithink-documents-skill.zip` | Mijozlar uchun ITHINK hujjatlari — tijorat taklifi, taqdimot, texnik taklif |
+| `amocrm-expert-skill.zip` | amoCRM integratori yordamchisi — vidjetlarni (Wazzup, OnlinePBX, Zadarma), Salesbot va voronkalarni tekshirish va sozlash. Sizning «ha»ingizsiz hech narsani o'zgartirmaydi |
 
-Uchalasini ham yuklab olishingiz mumkin, faqat kerakligini ham.
+Hammasini yuklab olishingiz mumkin, faqat kerakligini ham.
 
 > Assets ro'yxatida **Source code** (zip va tar.gz) ham turadi — ularni
 > yuklab olmang. Bu butun loyihaning nusxasi, skill emas; Claude uni qabul
-> qilmaydi. Faqat yuqoridagi uchta `-skill.zip` fayl kerak.
+> qilmaydi. Faqat yuqoridagi `-skill.zip` fayllar kerak.
 
 > `.zip` faylni **ochmang** va **arxivdan chiqarmang**. Claude'ga aynan
 > `.zip` ko'rinishida yuklanadi. macOS Safari arxivni avtomatik ochib
@@ -61,6 +62,48 @@ Boshqa misollar:
 > Bizning to'lov tizimi qanday ishlashini diagramma qilib ber
 >
 > Mijoz uchun tijorat taklifi tayyorla — server infratuzilmasini yangilash bo'yicha
+>
+> (ochiq amoCRM sahifasida) Nega bitimlarga WhatsApp xabarlari kelmay qoldi?
+
+## Barcha skillarni bitta o'rnatishda (Cowork)
+
+Har bir `.zip` ni alohida yuklash o'rniga butun repozitoriyni plagin
+sifatida ulash mumkin — barcha skillar birdaniga o'rnatiladi va o'zi
+yangilanadi.
+
+1. Claude Desktop → **Cowork** yorlig'i → **Customize**
+2. **Plugins** yorlig'i → **+** (Add) → **Add marketplace** → **Add from a repository**
+3. `shkholikov/ithink-skills` ni kiriting
+4. **Discover** yorlig'ida **ithink** plaginini topib, **Install** ni bosing
+5. Yangi versiyalar o'zi kelishi uchun **Sync automatically** ni yoqing
+
+Agar Add marketplace bandi bo'lmasa — 1–2-qadamlardagi `.zip` yuklashdan foydalaning.
+
+## amoCRM-ekspert Chrome'da
+
+Skill **Claude in Chrome** kengaytmasida, to'g'ridan-to'g'ri
+`{mijoz}.amocrm.ru` sahifasida ishlash uchun mo'ljallangan.
+
+1. Claude kengaytmasini
+   [Chrome Web Store](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn)
+   dan o'rnating va Claude hisobingizga kiring
+2. Kengaytma sozlamalarida **Manually approve** (qo'lda tasdiqlash)
+   rejimini tanlang — Claude sahifadagi har bir harakatdan oldin ruxsat
+   so'raydi. Bu skill qoidalari ustidan ikkinchi himoya
+3. `amocrm-expert` skilli (yoki **ithink** plagini) yoqilganini
+   tekshiring — hisobdagi skill va plaginlar Chrome yon panelida mavjud
+4. Mijoz hisobini oching va yon panelda yozing: «Qaysi hisobda ishlayapmiz
+   va bu yerda qaysi vidjetlar o'rnatilgan?»
+
+U qanday ishlaydi:
+
+- Avval qaysi mijoz hisobida ekanini aytadi
+- O'zi faqat o'qiydi: sozlamalar, vidjetlar, bitimlarni ochib, sababini qidiradi
+- Har qanday o'zgarishdan oldin **o'zgarish kartasini** ko'rsatadi: nima
+  qilinadi, oqibatlari (Salesbot, triggerlar, mijozlarga xabarlar), kimga
+  ta'sir qiladi, qanday qaytariladi
+- O'zgarishni faqat sizning aniq «ha»ingizdan keyin qiladi
+- Login, parol va kalitlarni o'zingiz kiritasiz — Claude ularni kiritmaydi
 
 ## Yangilash
 
